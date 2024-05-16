@@ -26,3 +26,19 @@ ELQWSVMDQEMRVKRLESEKQELQ'''
     assert (actual_headers[1] == expected_header and
             actual_sequences[1] == expected_sequence)
     
+
+def test_file_creation():
+    """Test the creation of individual FASTA files 
+    from header sequence lists."""
+    outfolder_name = os.path.join(os.getcwd(), 'test', 'test_data', 
+                                  'single_gene')
+    fname = os.path.join(outfolder_name, 'ENSG00000002822_ENST00000421113.txt')
+    expected_content = '''>ENSG00000002822|ENST00000421113
+MRAILGSYDSELTPAEYSPQLTRRMREAEDMVQKVHSHSAE'''
+    header = ['>ENSG00000002822|ENST00000421113']
+    sequence = ['MRAILGSYDSELTPAEYSPQLTRRMREAEDMVQKVHSHSAE']
+    fasta_one_to_many._create_files(header, sequence, outfolder_name)
+    with open(fname, 'r') as file:
+        actual_content = file.read()
+    assert actual_content == expected_content
+    

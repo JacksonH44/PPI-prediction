@@ -9,8 +9,16 @@ import logging
 import os
 
 
-def _create_files(headers, sequences):
-    pass
+def _create_files(headers, sequences, outfolder):
+    """Write each header sequence pair to its individual FASTA file."""
+    for header, sequence in zip(headers, sequences):
+        fname = header.split('>')[1].replace('|', '_')
+        fname = f'{fname}.txt'
+        file_path = os.path.join(outfolder, fname)
+        logging.debug(f'Writing to {file_path}')
+        os.makedirs(outfolder, exist_ok=True)
+        with open(file_path, 'w') as file:
+            file.write(f'{header}\n{sequence}')
 
 
 def process_file(fname):
@@ -80,14 +88,13 @@ def main():
     outfolder = args.outfolder 
     if args.outfolder is None:
         outfolder = os.path.join(os.getcwd(), args.infile.rsplit('.', 1)[0])
-    os.makedirs(outfolder, exist_ok=True)
-    logfile = args.logfile if args.logfile is not None else 'bin/fasta_one_to_many.log'
+    logfile = args.logfile if args.logfile is not None else 'log/fasta_one_to_many.log'
     logging_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(level=logging_level, filename=logfile)
-    logging.info(f'Saving files to {outfolder}')
     try:
+        logging.info('Creating header and sequence lists...')
         headers, sequences = process_file(args.infile)
-        _create_files(headers, sequences)
+        _create_files(headers, sequences, outfolder)
     except FileNotFoundError:
         msg = f'{args.infile} not processed: File does not exist'
         logging.warning(msg)
