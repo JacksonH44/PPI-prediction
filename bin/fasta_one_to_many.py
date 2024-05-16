@@ -9,6 +9,10 @@ import logging
 import os
 
 
+def _create_files(headers, sequences):
+    pass
+
+
 def process_file(fname):
     """Split FASTA file into names of smaller 
     FASTA files and their sequences."""
@@ -16,7 +20,7 @@ def process_file(fname):
     with open(fname, 'r') as reader:
         headers = []
         sequences = []
-        current_sequence = ''
+        current_sequence_pieces = []
         current_header = None
         sequence_available = True
         for line in reader:
@@ -27,9 +31,10 @@ def process_file(fname):
                     if sequence_available:
                         logging.debug(f'Adding header: {current_header}')
                         headers.append(current_header)
+                        current_sequence = '\n'.join(current_sequence_pieces)
                         logging.debug(f'Adding sequence:\n{current_sequence}')
                         sequences.append(current_sequence)
-                    current_sequence = ''
+                    current_sequence_pieces = []
                     sequence_available = True
                 
                 # Start a new header
@@ -38,12 +43,13 @@ def process_file(fname):
                 sequence_available = False
             else:
                 if sequence_available:
-                    current_sequence += line
+                    current_sequence_pieces.append(line)
         
         # Process the last header and sequence
         if current_header and sequence_available:
             logging.debug(f'Adding header: {current_header}')
             headers.append(current_header)
+            current_sequence = '\n'.join(current_sequence_pieces)
             logging.debug(f'Adding sequence:\n{current_sequence}')
             sequences.append(current_sequence)
     
@@ -80,7 +86,8 @@ def main():
     logging.basicConfig(level=logging_level, filename=logfile)
     logging.info(f'Saving files to {outfolder}')
     try:
-        fasta_fname, fasta_sequence = process_file(args.infile)
+        headers, sequences = process_file(args.infile)
+        _create_files(headers, sequences)
     except FileNotFoundError:
         msg = f'{args.infile} not processed: File does not exist'
         logging.warning(msg)
