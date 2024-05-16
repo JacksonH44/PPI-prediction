@@ -9,8 +9,45 @@ import logging
 import os
 
 
-def process_file(file_path):
-    pass
+def process_file(fname):
+    """Split FASTA file into names of smaller 
+    FASTA files and their sequences."""
+    logging.debug(f'Reading in {fname}...')
+    with open(fname, 'r') as reader:
+        headers = []
+        sequences = []
+        current_sequence = ''
+        current_header = None
+        sequence_available = True
+        for line in reader:
+            line = line.strip()
+            if line.startswith('>'):
+                # Process the previous header and sequence
+                if current_header:
+                    if sequence_available:
+                        logging.debug(f'Adding header: {current_header}')
+                        headers.append(current_header)
+                        logging.debug(f'Adding sequence:\n{current_sequence}')
+                        sequences.append(current_sequence)
+                    current_sequence = ''
+                    sequence_available = True
+                
+                # Start a new header
+                current_header = line
+            elif line == "Sequence unavailable":
+                sequence_available = False
+            else:
+                if sequence_available:
+                    current_sequence += line
+        
+        # Process the last header and sequence
+        if current_header and sequence_available:
+            logging.debug(f'Adding header: {current_header}')
+            headers.append(current_header)
+            logging.debug(f'Adding sequence:\n{current_sequence}')
+            sequences.append(current_sequence)
+    
+    return headers, sequences
 
 
 def parse_command_line():
@@ -37,15 +74,17 @@ def main():
     outfolder = args.outfolder 
     if args.outfolder is None:
         outfolder = os.path.join(os.getcwd(), args.infile.rsplit('.', 1)[0])
-    logfile = args.logfile if args.logfile is not None else 'fasta_one_to_many.log'
+    os.makedirs(outfolder, exist_ok=True)
+    logfile = args.logfile if args.logfile is not None else 'bin/fasta_one_to_many.log'
     logging_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(level=logging_level, filename=logfile)
     logging.info(f'Saving files to {outfolder}')
     try:
-        process_file(args.infile)
+        fasta_fname, fasta_sequence = process_file(args.infile)
     except FileNotFoundError:
         msg = f'{args.infile} not processed: File does not exist'
         logging.warning(msg)
+
 
 if __name__ == '__main__':
     main()
