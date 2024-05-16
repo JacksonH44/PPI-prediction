@@ -162,3 +162,7 @@ cython_debug/
 
 # Data files
 data/*
+test/test_data/single_gene/*
+
+# Log files
+log/*
