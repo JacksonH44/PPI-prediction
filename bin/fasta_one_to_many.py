@@ -13,7 +13,7 @@ def _create_files(headers, sequences, outfolder):
     """Write each header sequence pair to its individual FASTA file."""
     for header, sequence in zip(headers, sequences):
         fname = header.split('>')[1].replace('|', '_')
-        fname = f'{fname}.txt'
+        fname = f'{fname}.fasta'
         file_path = os.path.join(outfolder, fname)
         logging.debug(f'Writing to {file_path}')
         os.makedirs(outfolder, exist_ok=True)

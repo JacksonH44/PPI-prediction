@@ -166,3 +166,12 @@ test/test_data/single_gene/*
 
 # Log files
 log/*
+
+# SLURM script files
+jobs/*
+
+# Miscellaneous files
+requirements_cc.txt
+utils/strip_computecanada.sh
+test/test_data/test_gene1/
+test/test_data/test_gene2/
