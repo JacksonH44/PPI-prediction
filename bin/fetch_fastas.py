@@ -9,6 +9,7 @@ import logging
 import os
 
 from dotenv import load_dotenv
+import pandas as pd
 import requests
 
 load_dotenv()
@@ -18,9 +19,22 @@ API_KEY = os.getenv('API_KEY')
 BASE_URL = os.getenv('EFETCH_BASE_URL')
 
 
-def fetch_fastas(accession_numbers, output_folder):
-    """Make an NCBI API request for the amino acid sequence in
-    a FASTA file for each EntrezGene accession number in the list"""
+def fetch_fastas(input_file, output_folder):
+    """
+    Make an NCBI API request for the amino acid sequence in
+    a FASTA file for each EntrezGene accession number in the list.
+
+    Parameters
+    ----------
+    reference file : str
+        Absolute path to the input file that is an excel file with headers Isoform_ID
+        and GenBank_Accession. An example of such file is 'ppis.xlsx'. 
+    output_folder : str
+        Absolute path to the output folder where all individual FASTA files
+        will be written to
+    """
+    id_df = pd.read_excel(input_file, sheet_name='2A-Isoforms tested in Y2H', usecols=['Isoform_ID', 'GenBank_Accession'])
+    accession_numbers = id_df['GenBank_Accession'].tolist()
     for accession in accession_numbers:
         params = {
             'db': 'nuccore',
@@ -33,7 +47,8 @@ def fetch_fastas(accession_numbers, output_folder):
         logging.debug(f'Request for transcript from {accession} had API response {response.status_code}')
         if response.status_code == 200:
             fasta_sequence = response.text
-            output_file = os.path.join(output_folder, f'{accession}.fasta')
+            isoform_id = (id_df[id_df['GenBank_Accession'] == accession]['Isoform_ID'].values)[0]
+            output_file = os.path.join(output_folder, f'{isoform_id}.fasta')
             with open(output_file, "w") as file:
                 file.write(fasta_sequence)
         else:
@@ -66,7 +81,7 @@ def main():
             file.write("") # Write an empty string to create the file
     logging_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
-    fetch_fastas(['KU177872'], args.outfolder)
+    fetch_fastas(args.infile, args.outfolder)
 
 
 if __name__ == '__main__':
