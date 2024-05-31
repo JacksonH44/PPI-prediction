@@ -160,9 +160,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# VSCode 
+.vscode/
+
 # Data files
-data/*
 test/test_data/single_gene/*
+data/raw
 
 # Log files
 log/*
