@@ -21,7 +21,7 @@ def test_observation_creation1():
         'perturbation': [True, True, False, True, True, True]
     }
     expected_df = pd.DataFrame(data=expected_data)
-    actual_df = create_protein_triplets.find_triplets('test/test_data/test_ppis1.xlsx')
+    actual_df = create_protein_triplets.find_triplets('test/test_data/test_ppis1.xlsx', False)
     assert expected_df.equals(actual_df)
 
 
@@ -37,7 +37,7 @@ def test_observation_creation2():
         'perturbation': [True, True, False, True, True, False, True, False, True, True, False]
     }
     expected_df = pd.DataFrame(data=expected_data)
-    actual_df = create_protein_triplets.find_triplets('test/test_data/test_ppis2.xlsx')
+    actual_df = create_protein_triplets.find_triplets('test/test_data/test_ppis2.xlsx', False)
     assert expected_df.equals(actual_df)
 
 

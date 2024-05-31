@@ -28,7 +28,7 @@ def write_triplet_file(df, outfile):
     df.to_csv(outfile, index=False)
 
 
-def find_triplets(infile):
+def find_triplets(infile, positive):
     """
     Generate triplets of a reference isoform, an alternative isoform,
     a bait protein, and whether the alternative-bait complex interaction
@@ -39,11 +39,18 @@ def find_triplets(infile):
     infile : str
         Absolute path to the Excel file holding the protein-protein interactions.
         In the test_data folder, this file is called 'test_ppis.xlsx'.
+    positive : Boolean
+        A command-line flag specifying whether observations should be restricted 
+        to only those where the reference protein interacts with the bait (-p) or
+        not. The latter is known as ab initio prediction.
     """
     ppi_df = pd.read_excel(infile, sheet_name='2B-Isoform PPIs', 
                            usecols=['Gene_Symbol','Isoform_ID', 'Category', 
                                     'Interactor_ID', 'Interaction_Found'])
-    reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] != 'N/A')]
+    if positive:
+        reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] == 'positive')]
+    else:
+        reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] != 'N/A')]
     logging.debug(f'Reference proteins:\n{reference_isoforms}')
     observations = []
 
@@ -78,6 +85,10 @@ def parse_command_line():
                         help='Absolute path to the protein-protein interaction Excel file.')
     parser.add_argument('outfile', type=str,
                         help='Absolute path of the CSV file to write to')
+    parser.add_argument('-p', '--positive',
+                        action='store_true',
+                        help='''Include this flag if you want the dataset to include only 
+                        reference isoforms that interact with the bait protein''')
     parser.add_argument('-v', '--verbose',
                         action='store_true',
                         help='Change logging level from default level to noisiest level')
@@ -98,7 +109,7 @@ def main():
     logging_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
     logging.debug('Creating triplets...')
-    observations = find_triplets(args.infile)
+    observations = find_triplets(args.infile, args.positive)
     logging.debug(f'Writing to triplet file in location {args.outfile}')
     write_triplet_file(observations, args.outfile)
 
