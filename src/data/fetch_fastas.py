@@ -75,7 +75,7 @@ def parse_command_line():
 def main():
     """Run the command line program."""
     args = parse_command_line()
-    logfile = args.logfile if args.logfile is not None else f'{os.path.join(os.getcwd(), "logs/fetch_fastas.log")}'
+    logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/fetch_fastas.log")
     if not os.path.exists(logfile):
         with open(logfile, 'w') as file:
             file.write("") # Write an empty string to create the file
