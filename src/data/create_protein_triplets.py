@@ -12,6 +12,22 @@ import os
 import pandas as pd
 
 
+def write_triplet_file(df, outfile):
+    """
+    Write the triplet dataframe to a CSV.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The observation triplets with labels (perturbation) dataframe.
+    outfile : str
+        Absolute path to the CSV file that you wish to write the triplets to.
+    """
+    # Group by T/F for ease of reading the CSV
+    df = df.sort_values(by='perturbation', ascending=False)
+    df.to_csv(outfile, index=False)
+
+
 def find_triplets(infile):
     """
     Generate triplets of a reference isoform, an alternative isoform,
@@ -23,13 +39,11 @@ def find_triplets(infile):
     infile : str
         Absolute path to the Excel file holding the protein-protein interactions.
         In the test_data folder, this file is called 'test_ppis.xlsx'.
-    outfile : str
-        Absolute path to the CSV file that you wish to write the triplets to.
     """
     ppi_df = pd.read_excel(infile, sheet_name='2B-Isoform PPIs', 
                            usecols=['Gene_Symbol','Isoform_ID', 'Category', 
                                     'Interactor_ID', 'Interaction_Found'])
-    reference_isoforms = ppi_df[ppi_df['Category'] == 'reference']
+    reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] != 'N/A')]
     logging.debug(f'Reference proteins:\n{reference_isoforms}')
     observations = []
 
@@ -40,7 +54,10 @@ def find_triplets(infile):
         logging.debug(f'Alternative isoforms for {isoform_id}:\n{alternative_isoforms}')
 
         for _, alt_row in alternative_isoforms.iterrows():
-            ref_isoform = reference_isoforms[(reference_isoforms['Gene_Symbol'] == gene_symbol) & (reference_isoforms['Interactor_ID'] == alt_row['Interactor_ID'])]
+            ref_isoform = reference_isoforms[(reference_isoforms['Gene_Symbol'] == gene_symbol) 
+                                             & (reference_isoforms['Interactor_ID'] == alt_row['Interactor_ID'])]
+            if ref_isoform.empty:
+                continue
             logging.debug(f'Alternative isoform:\n{alt_row}\nReference isoform:\n{ref_isoform}')
             # Create 4-tuples for the isoform-bait interaction
             ref_id = ref_isoform['Isoform_ID'].values[0]
@@ -82,6 +99,8 @@ def main():
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
     logging.debug('Creating triplets...')
     observations = find_triplets(args.infile)
+    logging.debug(f'Writing to triplet file in location {args.outfile}')
+    write_triplet_file(observations, args.outfile)
 
 
 if __name__ == '__main__':
