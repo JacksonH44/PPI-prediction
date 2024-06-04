@@ -50,14 +50,16 @@ def find_triplets(infile, positive):
     if positive:
         reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] == 'positive')]
     else:
-        reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] != 'N/A')]
+        reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference')]
     logging.debug(f'Reference proteins:\n{reference_isoforms}')
     observations = []
 
     for gene_symbol in reference_isoforms['Gene_Symbol'].unique():
         isoform_id = f'{gene_symbol}_1'
         logging.debug(f'Isoform: {isoform_id}, Gene symbol: {gene_symbol}')
-        alternative_isoforms = ppi_df[(ppi_df['Gene_Symbol'] == gene_symbol) & (ppi_df['Category'] == 'alternative')]
+        # Remove alternative isoforms that don't interact with the bait protein
+        alternative_isoforms = ppi_df[(ppi_df['Gene_Symbol'] == gene_symbol) & (ppi_df['Category'] == 'alternative') 
+                                      & (pd.notna(ppi_df['Interaction_Found']))]
         logging.debug(f'Alternative isoforms for {isoform_id}:\n{alternative_isoforms}')
 
         for _, alt_row in alternative_isoforms.iterrows():

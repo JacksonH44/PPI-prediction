@@ -11,33 +11,46 @@ import fasta_one_to_many
 import create_protein_triplets
 
 
-def test_observation_creation1():
+@pytest.mark.parametrize("test_file_path, expected_data, positive",
+    [
+        (
+            'test/test_data/test_ppis1.xlsx', 
+            {
+                'ref_ID': ['ACTN4_1', 'ACTN4_1', 'AKT1_1', 'AKT1_1', 'AKT1_1', 'BAG1_1'],
+                'alt_ID': ['ACTN4_4', 'ACTN4_4', 'AKT1_2', 'AKT1_2', 'AKT1_2', 'BAG1_2'],
+                'bait_ID': ['TRIM23', 'MYOZ2', 'TCL1A', 'TMCC2', 'MTUS2', 'HSPA8'],
+                'perturbation': [True, True, False, True, True, True]
+            }, 
+            False
+        ),
+        (
+            'test/test_data/test_ppis2.xlsx', 
+            {
+                'ref_ID': ['BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1',
+                     'BCL2L1_1', 'BTC_1'],
+                'alt_ID': ['BCL2L1_2', 'BCL2L1_2', 'BCL2L1_2', 'BCL2L1_3', 'BCL2L1_3',
+                     'BCL2L1_3', 'BTC_2'],
+                'bait_ID': ['BAD', 'BIK', 'BMF', 'BAD', 'BIK', 'BMF', 'GMPPA'],
+                'perturbation': [True, True, True, True, False, False, True]
+            },     
+            True
+        ),
+        (
+            'test/test_data/test_ppis3.xlsx',
+            {
+                'ref_ID': ['CLCN2_1', 'CLCN2_1', 'CLCN2_1', 'CLCN2_1', 'CLCN2_1'],
+                'alt_ID': ['CLCN2_2', 'CLCN2_3', 'CLCN2_4', 'CLCN2_4', 'CLCN2_5'],
+                'bait_ID': ['UBQLN1_ORF2', 'FHL3', 'FHL3', 'UBQLN1_ORF2', 'FHL3'],
+                'perturbation': [True, True, False, False, False]
+            },
+            False
+        )
+    ])
+def test_observation_creation(test_file_path, expected_data, positive):
     """Test that the observation dataframe creation function works, includes the 
-    correct labels for each triplet. Test 1/2."""
-    expected_data = {
-        'ref_ID': ['ACTN4_1', 'ACTN4_1', 'AKT1_1', 'AKT1_1', 'AKT1_1', 'BAG1_1'],
-        'alt_ID': ['ACTN4_4', 'ACTN4_4', 'AKT1_2', 'AKT1_2', 'AKT1_2', 'BAG1_2'],
-        'bait_ID': ['TRIM23', 'MYOZ2', 'TCL1A', 'TMCC2', 'MTUS2', 'HSPA8'],
-        'perturbation': [True, True, False, True, True, True]
-    }
+    correct labels for each triplet."""
     expected_df = pd.DataFrame(data=expected_data)
-    actual_df = create_protein_triplets.find_triplets('test/test_data/test_ppis1.xlsx', False)
-    assert expected_df.equals(actual_df)
-
-
-def test_observation_creation2():
-    """Test 2/2."""
-    expected_data = {
-        'ref_ID': ['BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1',
-                   'BCL2L1_1', 'BCL2L1_1', 'BTC_1', 'SERPING1_1', 'SERPING1_1'],
-        'alt_ID': ['BCL2L1_2', 'BCL2L1_2', 'BCL2L1_2', 'BCL2L1_2', 'BCL2L1_3', 'BCL2L1_3',
-                   'BCL2L1_3', 'BCL2L1_3', 'BTC_2', 'SERPING1_3', 'SERPING1_4'],
-        'bait_ID': ['BAD', 'BIK', 'VAC14', 'BMF', 'BAD', 'BIK', 'VAC14', 'BMF', 'GMPPA',
-                    'SLC30A2', 'SLC30A2'],
-        'perturbation': [True, True, False, True, True, False, True, False, True, True, False]
-    }
-    expected_df = pd.DataFrame(data=expected_data)
-    actual_df = create_protein_triplets.find_triplets('test/test_data/test_ppis2.xlsx', False)
+    actual_df = create_protein_triplets.find_triplets(test_file_path, positive)
     assert expected_df.equals(actual_df)
 
 
