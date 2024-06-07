@@ -7,9 +7,9 @@ from accession numbers.
 import argparse
 import logging
 import os
+import requests
 
 import pandas as pd
-import requests
 
 from core import config as cfg
 

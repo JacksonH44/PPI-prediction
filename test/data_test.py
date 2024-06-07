@@ -8,8 +8,15 @@ from src.data.fasta_one_to_many import _create_files, process_file
 from src.data.fetch_interactors import get_interactors, parse_input_genes
 
 
+@pytest.mark.parametrize("infile", [('test/test_data/test_cosmic_genes.csv')])
 def test_input_genes(infile):
     """Test the generation of reference gene list for PPI pairs."""
+    expected_output = ["CHD4", "CHEK2", "CIC", "CIITA", "CLIP1", "CLTC", 
+                       "CLTCL1", "CNBP", "CNOT3", "CNTRL", "COL1A1", 
+                       "COL2A1", "CREB1", "CREB3L1", "CREB3L2", "CREBBP",
+                       "CRLF2", "CRTC1"]
+    actual_output = parse_input_genes(infile)
+    assert expected_output == actual_output
 
 
 @pytest.mark.parametrize("gene_list, expected_interactions, threshold_level",

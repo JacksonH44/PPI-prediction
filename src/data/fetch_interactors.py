@@ -4,7 +4,7 @@ Fetch protein interactors for a set of genes.
 
 
 import argparse
-import json
+import csv
 import logging
 import os
 import requests
@@ -14,6 +14,19 @@ import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
+
+
+def write_ppi_file(ppi_list, outfile):
+    """Write the protein-protein interactions to a csv file with columns
+    gene_name_a, gene_name_b where a is the gene of interest (e.g., cancer
+    driver genes) and b is the interacting protein."""
+    logging.debug(f'Writing to directory {os.path.abspath(outfile)}...')
+    os.makedirs(os.path.abspath(os.path.join(os.path.dirname(outfile))), exist_ok=True)
+    rows = [pair.split('-') for pair in ppi_list]
+    with open(outfile, 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['gene_symbol_a', 'gene_symbol_b'])
+        writer.writerows(rows)
 
 
 def get_interactors(gene_list, cross_study_level=2):
@@ -32,8 +45,11 @@ def get_interactors(gene_list, cross_study_level=2):
     """
     request_url = cfg.BIOGRID_BASE_URL + "/interactions"
     evidence_list = [
+        "affinity capture-luminescence",
         "affinity capture-ms",
+        "affinity capture-rna",
         "affinity capture-western",
+        "reconstituted-complex"
         "two-hybrid",
         "pca"
     ]
@@ -62,23 +78,33 @@ def get_interactors(gene_list, cross_study_level=2):
         return
     
     logging.debug(f'Found a total of {len(interactions)} interactions...')
-    logging.debug(json.dumps(interactions, indent=2))
     # Create a hashmap of PPI pairs and the number of unique experiments. Unique experiments
     # are experiments that are from different studies (different Pubmed IDs).
     ppis = {}
     for interaction in interactions.values():
         sym_a = interaction['OFFICIAL_SYMBOL_A']
         sym_b = interaction['OFFICIAL_SYMBOL_B']
+        # Ensure pair is not already in the dataset
+        if f'{sym_a}-{sym_b}' in ppis:
+            ppis[f'{sym_a}-{sym_b}'].add(interaction['PUBMED_ID'])
+        elif f'{sym_b}-{sym_a}' in ppis:
+            ppis[f'{sym_b}-{sym_a}'].add(interaction['PUBMED_ID'])
         # Write cancer driver gene first
-        pair = f'{sym_a}-{sym_b}' if sym_a in gene_list else f'{sym_b}-{sym_a}'
-        if pair not in ppis:
-            ppis[pair] = {interaction['PUBMED_ID']}
-        else:
-            ppis[pair].add(interaction['PUBMED_ID'])
+        elif sym_a in gene_list:
+            ppis[f'{sym_a}-{sym_b}'] = {interaction['PUBMED_ID']}
+        else: # Gene b in gene_list
+            ppis[f'{sym_b}-{sym_a}'] = {interaction['PUBMED_ID']}
     logging.debug(f'All PPIs:\n{ppis}')
     high_conf_ppis = [k for k, v in ppis.items() if len(v) >= cross_study_level]
     logging.debug(f'High confidence PPIs:\n{high_conf_ppis}')
     return high_conf_ppis
+
+
+def chunk_input_genes(input_genes, chunk_size=60):
+    """Chunk input genes since the Biogrid API is limited to returning
+    10,000 interactions."""
+    chunked_list = [input_genes[i:i + chunk_size] for i in range(0, len(input_genes), chunk_size)]
+    return chunked_list
 
 
 def parse_input_genes(infile):
@@ -92,6 +118,10 @@ def parse_input_genes(infile):
 def parse_command_line():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('infile', type=str,
+                        help='Path to Input CSV containing genes of interest')
+    parser.add_argument('outfile', type=str,
+                        help='Output file path to write list of genes to')
     parser.add_argument('-v', '--verbose',
                         action='store_true',
                         help='Change logging level from default level to noisiest level')
@@ -111,8 +141,14 @@ def main():
             file.write("") # Write an empty string to create the file
     logging_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
-    parse_input_genes('data/raw/cancer_driver_gene_list.csv')
-    # ppis = get_interactors(["TMPRSS2"], 2)
+    input_genes = parse_input_genes(args.infile)
+    chunked_genes = chunk_input_genes(input_genes)
+    ppis = []
+    for chunk in chunked_genes:
+        ppi_chunk = get_interactors(chunk, 2)
+        ppis = ppis + ppi_chunk
+    logging.debug(f'Curated a total of {len(ppis)} PPIs')
+    write_ppi_file(ppis, args.outfile)
 
 
 if __name__ == '__main__':
