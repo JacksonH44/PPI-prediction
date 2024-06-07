@@ -4,11 +4,8 @@ import sys
 
 import pandas as pd
 
-bin_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/data'))
-sys.path.append(bin_dir)
-
-import fasta_one_to_many
-import create_protein_triplets
+from src.data import fasta_one_to_many
+from src.data import create_protein_triplets
 
 
 @pytest.mark.parametrize("test_file_path, expected_data, positive",

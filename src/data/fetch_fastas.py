@@ -12,11 +12,12 @@ from dotenv import load_dotenv
 import pandas as pd
 import requests
 
+from core import config as cfg
+
 load_dotenv()
 
-API_KEY = os.getenv('API_KEY')
-# Base URL for NCBI efetch
-BASE_URL = os.getenv('EFETCH_BASE_URL')
+API_KEY = cfg.NCBI_API_KEY
+BASE_URL = cfg.NCBI_BASE_URL
 
 
 def fetch_fastas(input_file, output_folder):

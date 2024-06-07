@@ -1,0 +1,6 @@
+ncbi:
+  api_key: "" # Replace with your own API key
+  base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+biogrid:
+  api_key: "" # Replace with your own API key
+  base_url: "https://webservice.thebiogrid.org"
