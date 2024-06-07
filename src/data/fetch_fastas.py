@@ -8,13 +8,10 @@ import argparse
 import logging
 import os
 
-from dotenv import load_dotenv
 import pandas as pd
 import requests
 
 from core import config as cfg
-
-load_dotenv()
 
 API_KEY = cfg.NCBI_API_KEY
 BASE_URL = cfg.NCBI_BASE_URL

@@ -3,8 +3,40 @@ import os
 
 import pandas as pd
 
-from src.data import fasta_one_to_many
-from src.data import create_protein_triplets
+from src.data.create_protein_triplets import find_triplets
+from src.data.fasta_one_to_many import _create_files, process_file
+from src.data.fetch_interactors import get_interactors, parse_input_genes
+
+
+def test_input_genes(infile):
+    """Test the generation of reference gene list for PPI pairs."""
+
+
+@pytest.mark.parametrize("gene_list, expected_interactions, threshold_level",
+    [
+        (
+            ["FANCE"],
+            {"FANCE-FANCC", "FANCE-FANCA", "FANCE-FANCD2", "FANCE-FANCF", 
+             "FANCE-FANCM", "FANCE-FANCG", "FANCE-HES1"},
+             2
+        ),
+        (
+            ["ASXL1", "SS18"],
+            {"ASXL1-BAP1", "ASXL1-FOXK1", "ASXL1-FOXK2", "ASXL1-HCFC1",
+             "SS18-SMARCA2"},
+            3
+        ),
+        (
+            ["TMPRSS2"],
+            set(),
+            2
+        )
+    ]
+)
+def test_interaction_creation(gene_list, expected_interactions, threshold_level):
+    """Test creation of PPI interactions."""
+    actual_interactions = set(get_interactors(gene_list, threshold_level))
+    assert actual_interactions == expected_interactions
 
 
 @pytest.mark.parametrize("test_file_path, expected_data, positive",
@@ -41,19 +73,20 @@ from src.data import create_protein_triplets
             },
             False
         )
-    ])
+    ]
+)
 def test_observation_creation(test_file_path, expected_data, positive):
     """Test that the observation dataframe creation function works, includes the 
     correct labels for each triplet."""
     expected_df = pd.DataFrame(data=expected_data)
-    actual_df = create_protein_triplets.find_triplets(test_file_path, positive)
+    actual_df = find_triplets(test_file_path, positive)
     assert expected_df.equals(actual_df)
 
 
 def test_filenotfounderror_handling():
     """Error handling test for a file that doesn't exist."""
     with pytest.raises(FileNotFoundError):
-        actual_fname, actual_seq = fasta_one_to_many.process_file('../data/nonexistent.txt')
+        actual_fname, actual_seq = process_file('../data/nonexistent.txt')
 
 
 def test_file_separation():
@@ -63,7 +96,7 @@ def test_file_separation():
     expected_sequence = '''MEDLGENTMVLSTLRSLNNFISQRVEGGSGLDISTSAPGSLQMQYQQSMQREVDRNQELL
 TRIRQLQEREAGAEEKMQEQLERNRQCQQNLDAASKRLREKEDSLAQAGETINALKGRIS
 ELQWSVMDQEMRVKRLESEKQELQ'''
-    actual_headers, actual_sequences = fasta_one_to_many.process_file(
+    actual_headers, actual_sequences = process_file(
         'test/test_data/test_gene1.txt')
     assert (actual_headers[1] == expected_header and
             actual_sequences[1] == expected_sequence)
@@ -79,7 +112,7 @@ def test_file_creation():
 MRAILGSYDSELTPAEYSPQLTRRMREAEDMVQKVHSHSAE'''
     header = ['>ENSG00000002822|ENST00000421113']
     sequence = ['MRAILGSYDSELTPAEYSPQLTRRMREAEDMVQKVHSHSAE']
-    fasta_one_to_many._create_files(header, sequence, outfolder_name)
+    _create_files(header, sequence, outfolder_name)
     with open(fname, 'r') as file:
         actual_content = file.read()
     assert actual_content == expected_content
