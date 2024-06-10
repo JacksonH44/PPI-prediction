@@ -4,13 +4,15 @@ Fetch protein interactors for a set of genes.
 
 
 import argparse
+import asyncio
 import csv
 import logging
 import os
-import requests
 import sys
+import time
 
 import pandas as pd
+import aiohttp
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
@@ -29,7 +31,11 @@ def write_ppi_file(ppi_list, outfile):
         writer.writerows(rows)
 
 
-def get_interactors(gene_list, cross_study_level=2):
+async def get_interactors(
+    session: aiohttp.ClientSession,
+    gene_list: list, 
+    cross_study_level: int = 2
+) -> list:
     """
     Retrive a dataset of all interactors for all genes
     of interest.
@@ -67,12 +73,13 @@ def get_interactors(gene_list, cross_study_level=2):
         "taxId": 9606, # Homo Sapiens taxonomy ID
         "includeHeader": "true"
     }
-    r = requests.get(request_url, params=params)
-    if r.status_code != 200:
+    # r = requests.get(request_url, params=params)
+    resp = await session.request('GET', url=request_url, params=params)
+    if resp.status != 200:
         logging.warning("Failed to get request for one of the genes in the gene list")
         return
     
-    interactions = r.json()
+    interactions = await resp.json()
     if len(interactions) == 0:
         logging.warning("Failed to retrieve any interaction experiments for the genes in the gene list")
         return
@@ -94,20 +101,19 @@ def get_interactors(gene_list, cross_study_level=2):
             ppis[f'{sym_a}-{sym_b}'] = {interaction['PUBMED_ID']}
         else: # Gene b in gene_list
             ppis[f'{sym_b}-{sym_a}'] = {interaction['PUBMED_ID']}
-    logging.debug(f'All PPIs:\n{ppis}')
     high_conf_ppis = [k for k, v in ppis.items() if len(v) >= cross_study_level]
     logging.debug(f'High confidence PPIs:\n{high_conf_ppis}')
     return high_conf_ppis
 
 
-def chunk_input_genes(input_genes, chunk_size=60):
+def chunk_input_genes(input_genes: list, chunk_size: int = 60) -> list:
     """Chunk input genes since the Biogrid API is limited to returning
     10,000 interactions."""
     chunked_list = [input_genes[i:i + chunk_size] for i in range(0, len(input_genes), chunk_size)]
     return chunked_list
 
 
-def parse_input_genes(infile):
+def parse_input_genes(infile) -> list:
     """Parse the input file and return a list of official gene symbols."""
     df = pd.read_csv(infile)
     input_genes = df.iloc[:, 0].tolist()
@@ -132,7 +138,7 @@ def parse_command_line():
     return args
 
 
-def main():
+async def main():
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/fetch_interactors.log")
@@ -143,13 +149,18 @@ def main():
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
     input_genes = parse_input_genes(args.infile)
     chunked_genes = chunk_input_genes(input_genes)
-    ppis = []
-    for chunk in chunked_genes:
-        ppi_chunk = get_interactors(chunk, 2)
-        ppis = ppis + ppi_chunk
+    start = time.perf_counter()
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for chunk in chunked_genes:
+            tasks.append(get_interactors(session, chunk, 2))
+        ppi_lists = await asyncio.gather(*tasks, return_exceptions=True)
+    finish = time.perf_counter()
+    logging.debug(f'Finished curation in {round(finish - start, 2)} second(s)')
+    ppis = [ppi for sublist in ppi_lists for ppi in sublist]
     logging.debug(f'Curated a total of {len(ppis)} PPIs')
     write_ppi_file(ppis, args.outfile)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

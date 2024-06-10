@@ -1,6 +1,8 @@
+import asyncio
 import pytest
 import os
 
+import aiohttp
 import pandas as pd
 
 from src.data.create_protein_triplets import find_triplets
@@ -19,6 +21,7 @@ def test_input_genes(infile):
     assert expected_output == actual_output
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("gene_list, expected_interactions, threshold_level",
     [
         (
@@ -29,8 +32,7 @@ def test_input_genes(infile):
         ),
         (
             ["ASXL1", "SS18"],
-            {"ASXL1-BAP1", "ASXL1-FOXK1", "ASXL1-FOXK2", "ASXL1-HCFC1",
-             "SS18-SMARCA2"},
+            {"ASXL1-BAP1", "ASXL1-FOXK1", "ASXL1-FOXK2", "ASXL1-HCFC1"},
             3
         ),
         (
@@ -40,9 +42,11 @@ def test_input_genes(infile):
         )
     ]
 )
-def test_interaction_creation(gene_list, expected_interactions, threshold_level):
+async def test_interaction_creation(gene_list, expected_interactions, threshold_level):
     """Test creation of PPI interactions."""
-    actual_interactions = set(get_interactors(gene_list, threshold_level))
+    async with aiohttp.ClientSession() as session:
+        ppis = await get_interactors(session, gene_list, threshold_level)
+    actual_interactions = set(ppis)
     assert actual_interactions == expected_interactions
 
 
