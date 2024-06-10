@@ -7,7 +7,18 @@ import pandas as pd
 
 from src.data.create_protein_triplets import find_triplets
 from src.data.fasta_one_to_many import _create_files, process_file
-from src.data.fetch_interactors import get_interactors, parse_input_genes
+from src.data.generate_positive_dataset import chunk_input_genes, get_interactors, parse_input_genes
+
+
+def test_chunk_genes():
+    input_genes = ["FANCE", "BRCA1", "ARID1A", "BCL10", "ERBB4"]
+    expected_chunked_genes = [
+        ["FANCE", "BRCA1"],
+        ["ARID1A", "BCL10"],
+        ["ERBB4"]
+    ]
+    actual_chunked_genes = chunk_input_genes(input_genes, 2)
+    assert actual_chunked_genes == expected_chunked_genes
 
 
 @pytest.mark.parametrize("infile", [('test/test_data/test_cosmic_genes.csv')])

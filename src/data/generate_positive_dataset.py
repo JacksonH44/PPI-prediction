@@ -42,6 +42,9 @@ async def get_interactors(
 
     Parameters
     ----------
+    session: aiohttp.ClientSession
+        The current asynchronous session to make the async 
+        calls to the BioGrid API.
     gene_list: list(str)
         A list of the official symbols of a gene
     cross_study_level: int
@@ -121,7 +124,7 @@ def parse_input_genes(infile) -> list:
     return input_genes
 
 
-def parse_command_line():
+def parse_command_line(): # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('infile', type=str,
@@ -138,7 +141,7 @@ def parse_command_line():
     return args
 
 
-async def main():
+async def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/fetch_interactors.log")
@@ -149,7 +152,8 @@ async def main():
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
     input_genes = parse_input_genes(args.infile)
     chunked_genes = chunk_input_genes(input_genes)
-    start = time.perf_counter()
+    start = time.perf_counter() # Time the function call for debugging
+    # Make the API calls asynchronously
     async with aiohttp.ClientSession() as session:
         tasks = []
         for chunk in chunked_genes:
@@ -162,5 +166,5 @@ async def main():
     write_ppi_file(ppis, args.outfile)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     asyncio.run(main())

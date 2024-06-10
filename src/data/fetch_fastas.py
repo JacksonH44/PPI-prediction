@@ -53,7 +53,7 @@ def fetch_fastas(input_file, output_folder):
             logging.warning(f"Failed to retrieve sequence for {accession}")
 
 
-def parse_command_line():
+def parse_command_line(): # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('infile', type=str,
@@ -70,7 +70,7 @@ def parse_command_line():
     return args
 
 
-def main():
+def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/fetch_fastas.log")
@@ -82,5 +82,5 @@ def main():
     fetch_fastas(args.infile, args.outfolder)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()

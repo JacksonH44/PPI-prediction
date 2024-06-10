@@ -80,7 +80,7 @@ def find_triplets(infile, positive):
     return observation_df
 
 
-def parse_command_line():
+def parse_command_line(): # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('infile', type=str,
@@ -101,7 +101,7 @@ def parse_command_line():
     return args
 
 
-def main():
+def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/create_protein_triplets.log")
@@ -116,5 +116,5 @@ def main():
     write_triplet_file(observations, args.outfile)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()
