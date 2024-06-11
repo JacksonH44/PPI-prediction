@@ -6,11 +6,28 @@ import aiohttp
 import pandas as pd
 
 from src.data.create_protein_triplets import find_triplets
+from src.data.data_pruning import remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
 from src.data.generate_positive_dataset import chunk_input_genes, get_interactors, parse_input_genes
 
 
+def test_remove_ground_truth():
+    """Test the pruning of data in a dataset that 
+    also appears in a ground truth dataset."""
+    unpruned_ppis = ["NAT2-TEST", "TEST-ABCA3", "TEST1-TEST2", "SERPINA3-ACAA1"]
+    expected_output = ["TEST1-TEST2"]
+    actual_output = remove_ground_truth_data(
+        unpruned_ppis, 
+        'test/test_data/test_remove_ground_truth.xlsx',
+        '1A-Gene List',
+        'Gene_Symbol'
+    )
+    assert actual_output == expected_output
+
+
 def test_chunk_genes():
+    """Test the chunking of a list of genes into chunks of 
+    genes (makes it easier for API calls)."""
     input_genes = ["FANCE", "BRCA1", "ARID1A", "BCL10", "ERBB4"]
     expected_chunked_genes = [
         ["FANCE", "BRCA1"],
