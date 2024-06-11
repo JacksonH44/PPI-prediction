@@ -16,6 +16,7 @@ import aiohttp
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
+from data_pruning import remove_ground_truth_data
 
 
 def write_ppi_file(ppi_list, outfile):
@@ -24,7 +25,7 @@ def write_ppi_file(ppi_list, outfile):
     driver genes) and b is the interacting protein."""
     logging.debug(f'Writing to directory {os.path.abspath(outfile)}...')
     os.makedirs(os.path.abspath(os.path.join(os.path.dirname(outfile))), exist_ok=True)
-    rows = [pair.split('-') for pair in ppi_list]
+    rows = [pair.split('_') for pair in ppi_list]
     with open(outfile, 'w') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['gene_symbol_a', 'gene_symbol_b'])
@@ -76,7 +77,6 @@ async def get_interactors(
         "taxId": 9606, # Homo Sapiens taxonomy ID
         "includeHeader": "true"
     }
-    # r = requests.get(request_url, params=params)
     resp = await session.request('GET', url=request_url, params=params)
     if resp.status != 200:
         logging.warning("Failed to get request for one of the genes in the gene list")
@@ -87,7 +87,6 @@ async def get_interactors(
         logging.warning("Failed to retrieve any interaction experiments for the genes in the gene list")
         return
     
-    logging.debug(f'Found a total of {len(interactions)} interactions...')
     # Create a hashmap of PPI pairs and the number of unique experiments. Unique experiments
     # are experiments that are from different studies (different Pubmed IDs).
     ppis = {}
@@ -95,17 +94,18 @@ async def get_interactors(
         sym_a = interaction['OFFICIAL_SYMBOL_A']
         sym_b = interaction['OFFICIAL_SYMBOL_B']
         # Ensure pair is not already in the dataset
-        if f'{sym_a}-{sym_b}' in ppis:
-            ppis[f'{sym_a}-{sym_b}'].add(interaction['PUBMED_ID'])
-        elif f'{sym_b}-{sym_a}' in ppis:
-            ppis[f'{sym_b}-{sym_a}'].add(interaction['PUBMED_ID'])
+        experimental_id = f'{interaction["PUBMED_ID"]}_{interaction["EXPERIMENTAL_SYSTEM"]}'
+        if f'{sym_a}_{sym_b}' in ppis:
+            ppis[f'{sym_a}_{sym_b}'].add(experimental_id)
+        elif f'{sym_b}_{sym_a}' in ppis:
+            ppis[f'{sym_b}_{sym_a}'].add(experimental_id)
         # Write cancer driver gene first
         elif sym_a in gene_list:
-            ppis[f'{sym_a}-{sym_b}'] = {interaction['PUBMED_ID']}
+            ppis[f'{sym_a}_{sym_b}'] = {experimental_id}
         else: # Gene b in gene_list
-            ppis[f'{sym_b}-{sym_a}'] = {interaction['PUBMED_ID']}
-    high_conf_ppis = [k for k, v in ppis.items() if len(v) >= cross_study_level]
-    logging.debug(f'High confidence PPIs:\n{high_conf_ppis}')
+            ppis[f'{sym_b}_{sym_a}'] = {experimental_id}
+    high_conf_ppis = [ppi for ppi, e_id in ppis.items() if len(e_id) >= cross_study_level]
+    logging.debug(f'Found a total of {len(interactions)} and generated {len(high_conf_ppis)} high confidence PPIs...')
     return high_conf_ppis
 
 
@@ -144,7 +144,7 @@ def parse_command_line(): # pragma: no cover
 async def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
-    logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/fetch_interactors.log")
+    logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/generate_positive_dataset.log")
     if not os.path.exists(logfile):
         with open(logfile, 'w') as file:
             file.write("") # Write an empty string to create the file
@@ -155,15 +155,22 @@ async def main(): # pragma: no cover
     start = time.perf_counter() # Time the function call for debugging
     # Make the API calls asynchronously
     async with aiohttp.ClientSession() as session:
-        tasks = []
-        for chunk in chunked_genes:
-            tasks.append(get_interactors(session, chunk, 2))
+        tasks = [get_interactors(session, chunk, 2) for chunk in chunked_genes]
         ppi_lists = await asyncio.gather(*tasks, return_exceptions=True)
     finish = time.perf_counter()
-    logging.debug(f'Finished curation in {round(finish - start, 2)} second(s)')
+    logging.info(f'Finished curation in {round(finish - start, 2)} second(s)')
     ppis = [ppi for sublist in ppi_lists for ppi in sublist]
-    logging.debug(f'Curated a total of {len(ppis)} PPIs')
-    write_ppi_file(ppis, args.outfile)
+    logging.info(f'Curated a total of {len(ppis)} high confidence PPIs...')
+    logging.debug('Removing ground truth PPIs...')
+    # Remove PPIs that include a protein from the ground truth data
+    ground_truth_out_ppis = remove_ground_truth_data(
+        ppis,
+        cfg.GROUND_TRUTH_PATH,
+        cfg.GROUND_TRUTH_SHEET,
+        cfg.GROUND_TRUTH_COLUMN
+    )
+    logging.info(f'Curated a total of {len(ground_truth_out_ppis)} unbiased PPIs...')
+    write_ppi_file(ground_truth_out_ppis, args.outfile)
 
 
 if __name__ == '__main__': # pragma: no cover

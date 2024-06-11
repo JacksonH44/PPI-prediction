@@ -20,5 +20,10 @@ data = yaml.load(data, Loader=yaml.FullLoader)
 # Custom variables
 NCBI_API_KEY = data["ncbi"]["api_key"]
 NCBI_BASE_URL = data["ncbi"]["base_url"]
+
 BIOGRID_API_KEY = data["biogrid"]["api_key"]
 BIOGRID_BASE_URL = data["biogrid"]["base_url"]
+
+GROUND_TRUTH_PATH = data["ground_truth"]["file_path"]
+GROUND_TRUTH_SHEET = data["ground_truth"]["sheet_name"]
+GROUND_TRUTH_COLUMN = data["ground_truth"]["column"]

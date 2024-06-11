@@ -31,7 +31,7 @@ def remove_ground_truth_data(
         """Determines whether a given PPI from the unpruned
         PPIs contains any proteins that were tested in the
         ground truth dataset."""
-        protein_1, protein_2 = interaction.split('-')
+        protein_1, protein_2 = interaction.split('_')
         return protein_1 not in gene_set and protein_2 not in gene_set
     
     genes_df = pd.read_excel(
