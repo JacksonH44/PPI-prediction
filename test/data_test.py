@@ -19,7 +19,8 @@ def test_remove_ground_truth():
         unpruned_ppis, 
         'test/test_data/test_remove_ground_truth.xlsx',
         '1A-Gene List',
-        'Gene_Symbol'
+        'Gene_Symbol',
+        'data/interim/triplets.csv'
     )
     assert actual_output == expected_output
 

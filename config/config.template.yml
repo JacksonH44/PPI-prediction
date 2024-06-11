@@ -8,3 +8,5 @@ ground_truth:
   file_path: "data/raw/isoform_sequences.xlsx"
   sheet_name: "1A-Gene List"
   column: "Gene_Symbol"
+  triplet: "data/interim/triplets.csv"
+  

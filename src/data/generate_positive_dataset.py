@@ -165,7 +165,8 @@ async def main(): # pragma: no cover
         ppis,
         cfg.GROUND_TRUTH_PATH,
         cfg.GROUND_TRUTH_SHEET,
-        cfg.GROUND_TRUTH_COLUMN
+        cfg.GROUND_TRUTH_COLUMN,
+        cfg.TRIPLET_FILE
     )
     logging.info(f'Curated a total of {len(ground_truth_out_ppis)} unbiased PPIs...')
     write_ppi_file(ground_truth_out_ppis, args.outfile)
