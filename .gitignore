@@ -165,7 +165,8 @@ cython_debug/
 
 # Data files
 test/test_data/single_gene/*
-test/test_outputs/*
+test/test_output/*
+data/interim/*
 
 # Log files
 log/*
@@ -178,3 +179,6 @@ requirements_cc.txt
 utils/strip_computecanada.sh
 test/test_data/test_gene1/
 test/test_data/test_gene2/
+
+# Config files
+config/config.yml

@@ -64,7 +64,7 @@ def process_file(fname):
     return headers, sequences
 
 
-def parse_command_line():
+def parse_command_line(): # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('infile', type=str,
@@ -82,7 +82,7 @@ def parse_command_line():
     return args
 
 
-def main():
+def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     outfolder = args.outfolder 
@@ -100,5 +100,5 @@ def main():
         logging.warning(msg)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()

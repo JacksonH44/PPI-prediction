@@ -1,0 +1,12 @@
+ncbi:
+  api_key: "" # Replace with your own API key
+  base_url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+biogrid:
+  api_key: "" # Replace with your own API key
+  base_url: "https://webservice.thebiogrid.org"
+ground_truth:
+  file_path: "data/raw/isoform_sequences.xlsx"
+  sheet_name: "1A-Gene List"
+  column: "Gene_Symbol"
+  triplet: "data/interim/triplets.csv"
+  
