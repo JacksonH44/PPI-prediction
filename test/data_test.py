@@ -14,7 +14,7 @@ def test_remove_ground_truth():
     """Test the pruning of data in a dataset that 
     also appears in a ground truth dataset."""
     unpruned_ppis = ["NAT2_TEST", "TEST_ABCA3", "TEST-1_TEST-2", "SERPINA3_ACAA1"]
-    expected_output = ["TEST1_TEST2"]
+    expected_output = ["TEST-1_TEST-2"]
     actual_output = remove_ground_truth_data(
         unpruned_ppis, 
         'test/test_data/test_remove_ground_truth.xlsx',
@@ -54,12 +54,15 @@ def test_input_genes(infile):
         (
             ["FANCE"],
             {"FANCE_FANCC", "FANCE_FANCA", "FANCE_FANCD2", "FANCE_FANCF", 
-             "FANCE_FANCM", "FANCE_FANCG", "FANCE_HES1"},
+             "FANCE_FANCM", "FANCE_FANCG", "FANCE_HES1", "FANCE_APITD1",
+             "FANCE_STRA13"},
              2
         ),
         (
             ["ASXL1", "SS18"],
-            {"ASXL1_BAP1", "ASXL1_FOXK1", "ASXL1_FOXK2", "ASXL1_HCFC1"},
+            {"ASXL1_BAP1", "ASXL1_FOXK1", "ASXL1_FOXK2", "ASXL1_HCFC1",
+             "ASXL1_HIST1H1C", "ASXL1_AKT1", "SS18_SMARCA2", "SS18_SMARCB1",
+             "SS18_RBM14"},
             3
         ),
         (

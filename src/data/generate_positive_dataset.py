@@ -16,7 +16,7 @@ import aiohttp
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
-from data_pruning import remove_ground_truth_data
+from src.data.data_pruning import remove_ground_truth_data
 
 
 def write_ppi_file(ppi_list, outfile):
@@ -59,9 +59,7 @@ async def get_interactors(
         "affinity capture-ms",
         "affinity capture-rna",
         "affinity capture-western",
-        "reconstituted-complex"
-        "two-hybrid",
-        "pca"
+        "two-hybrid"
     ]
     params = {
         "accesskey": cfg.BIOGRID_API_KEY,
