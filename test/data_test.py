@@ -68,33 +68,48 @@ def test_parse_input_genes_success(infile):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("gene_list, expected_interactions, threshold_level",
+@pytest.mark.parametrize("gene_list, expected_interactions, threshold_level, relax_evidence",
     [
         (
             ["FANCE"],
             {"FANCE_FANCC", "FANCE_FANCA", "FANCE_FANCD2", "FANCE_FANCF", 
              "FANCE_FANCM", "FANCE_FANCG", "FANCE_HES1", "FANCE_APITD1",
              "FANCE_STRA13"},
-             2
+             2,
+             False
         ),
         (
             ["ASXL1", "SS18"],
             {"ASXL1_BAP1", "ASXL1_FOXK1", "ASXL1_FOXK2", "ASXL1_HCFC1",
              "ASXL1_HIST1H1C", "ASXL1_AKT1", "SS18_SMARCA2", "SS18_SMARCB1",
              "SS18_RBM14"},
-            3
+            3,
+            False
         ),
         (
             ["TMPRSS2"],
             set(),
-            2
+            2,
+            False
+        ),
+        (
+            ["HLF"],
+            {"HLF_CREBBP", "HLF_TET2", "HLF_TLK1", "HLF_DBP", "HLF_HNF4G", 
+             "HLF_MYB", "MYB_CREBBP"},
+            10,
+            True
         )
     ]
 )
-async def test_get_interactors_success(gene_list, expected_interactions, threshold_level):
+async def test_get_interactors_success(
+    gene_list, 
+    expected_interactions, 
+    threshold_level,
+    relax_evidence
+):
     """Test creation of PPI interactions."""
     async with aiohttp.ClientSession() as session:
-        ppis = await get_interactors(session, gene_list, threshold_level)
+        ppis = await get_interactors(session, gene_list, threshold_level, relax_evidence)
     actual_interactions = set(ppis)
     assert actual_interactions == expected_interactions
 

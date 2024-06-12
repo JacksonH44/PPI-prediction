@@ -53,7 +53,7 @@ async def get_interactors(
         "format": "json",
         "geneList": "|".join(gene_list),
         "interSpeciesExcluded": inter_species_excluded,
-        "selfInteractionsExcluded": "false",
+        "selfInteractionsExcluded": "true",
         "evidenceList": "|".join(evidence_list),
         "includeEvidence": "true",
         "includeInteractors": "true",
