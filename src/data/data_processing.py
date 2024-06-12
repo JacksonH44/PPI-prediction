@@ -1,5 +1,7 @@
-"""A collection of functions to remove biased or erroneous
-data observations from a dataset"""
+"""
+A collection of functions to remove biased or erroneous
+data observations from a dataset.
+"""
 
 
 import pandas as pd
@@ -43,7 +45,8 @@ def remove_ground_truth_data(
     genes_df = pd.read_excel(
         reference_file_path, 
         sheet_name=sheet_name,
-        usecols=[column_name]
+        usecols=[column_name],
+        engine='calamine'
     )
     gene_set = set(genes_df[column_name])
     # Read in all experimentally validated interactions
@@ -56,3 +59,10 @@ def remove_ground_truth_data(
     interaction_set = set(ref_bait_strings).union(set(bait_ref_strings))
     filtered_interactions = [interaction for interaction in unpruned_ppis if is_interaction_valid(interaction, gene_set, interaction_set)]
     return filtered_interactions
+
+
+def parse_input_genes(infile) -> list:
+    """Parse the input file and return a list of official gene symbols."""
+    df = pd.read_csv(infile)
+    input_genes = df.iloc[:, 0].tolist()
+    return input_genes

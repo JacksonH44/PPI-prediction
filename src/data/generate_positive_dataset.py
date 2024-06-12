@@ -1,5 +1,5 @@
 """
-Fetch protein interactors for a set of genes.
+Generate positive dataset for PPIs.
 """
 
 
@@ -11,12 +11,11 @@ import os
 import sys
 import time
 
-import pandas as pd
 import aiohttp
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
-from src.data.data_pruning import remove_ground_truth_data
+from src.data.data_processing import parse_input_genes, remove_ground_truth_data
 
 
 def write_ppi_file(ppi_list, outfile):
@@ -25,6 +24,7 @@ def write_ppi_file(ppi_list, outfile):
     driver genes) and b is the interacting protein."""
     logging.debug(f'Writing to directory {os.path.abspath(outfile)}...')
     os.makedirs(os.path.abspath(os.path.join(os.path.dirname(outfile))), exist_ok=True)
+    ppi_list.sort()
     rows = [pair.split('_') for pair in ppi_list]
     with open(outfile, 'w') as csvfile:
         writer = csv.writer(csvfile)
@@ -112,14 +112,6 @@ def chunk_input_genes(input_genes: list, chunk_size: int = 60) -> list:
     10,000 interactions."""
     chunked_list = [input_genes[i:i + chunk_size] for i in range(0, len(input_genes), chunk_size)]
     return chunked_list
-
-
-def parse_input_genes(infile) -> list:
-    """Parse the input file and return a list of official gene symbols."""
-    df = pd.read_csv(infile)
-    input_genes = df.iloc[:, 0].tolist()
-    logging.debug(input_genes)
-    return input_genes
 
 
 def parse_command_line(): # pragma: no cover

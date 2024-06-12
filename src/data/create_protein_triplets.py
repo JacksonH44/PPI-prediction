@@ -44,9 +44,12 @@ def find_triplets(infile, positive):
         to only those where the reference protein interacts with the bait (-p) or
         not. The latter is known as ab initio prediction.
     """
-    ppi_df = pd.read_excel(infile, sheet_name='2B-Isoform PPIs', 
-                           usecols=['Gene_Symbol','Isoform_ID', 'Category', 
-                                    'Interactor_ID', 'Interaction_Found'])
+    ppi_df = pd.read_excel(
+        infile, 
+        sheet_name='2B-Isoform PPIs', 
+        usecols=['Gene_Symbol','Isoform_ID', 'Category', 'Interactor_ID', 'Interaction_Found'],
+        engine='calamine'
+    )
     if positive:
         reference_isoforms = ppi_df[(ppi_df['Category'] == 'reference') & (ppi_df['Interaction_Found'] == 'positive')]
     else:
