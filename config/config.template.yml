@@ -9,4 +9,3 @@ ground_truth:
   sheet_name: "1A-Gene List"
   column: "Gene_Symbol"
   triplet: "data/interim/triplets.csv"
-  

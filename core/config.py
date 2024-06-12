@@ -5,7 +5,6 @@ that are available for ease of use.
 
 
 import os
-import sys
 
 import yaml
 
