@@ -5,19 +5,19 @@ import aiohttp
 import pandas as pd
 
 from src.data.create_protein_triplets import find_triplets
-from src.data.data_pruning import remove_ground_truth_data
+from src.data.data_processing import remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
 from src.data.generate_positive_dataset import chunk_input_genes, get_interactors, parse_input_genes
 
 
-def test_remove_ground_truth():
+def test_remove_ground_truth_data_success():
     """Test the pruning of data in a dataset that 
     also appears in a ground truth dataset."""
     unpruned_ppis = ["NAT2_TEST", "TEST_ABCA3", "TEST-1_TEST-2", "SERPINA3_ACAA1"]
     expected_output = ["TEST-1_TEST-2"]
     actual_output = remove_ground_truth_data(
         unpruned_ppis, 
-        'test/test_data/test_remove_ground_truth.xlsx',
+        'test/test_data/isoform_sequences_test.xlsx',
         '1A-Gene List',
         'Gene_Symbol',
         'data/interim/triplets.csv'
@@ -25,7 +25,7 @@ def test_remove_ground_truth():
     assert actual_output == expected_output
 
 
-def test_chunk_genes():
+def test_chunk_input_genes_success():
     """Test the chunking of a list of genes into chunks of 
     genes (makes it easier for API calls)."""
     input_genes = ["FANCE", "BRCA1", "ARID1A", "BCL10", "ERBB4"]
@@ -38,8 +38,8 @@ def test_chunk_genes():
     assert actual_chunked_genes == expected_chunked_genes
 
 
-@pytest.mark.parametrize("infile", [('test/test_data/test_cosmic_genes.csv')])
-def test_input_genes(infile):
+@pytest.mark.parametrize("infile", [('test/test_data/cancer_driver_gene_list_test.csv')])
+def test_parse_input_genes_success(infile):
     """Test the generation of reference gene list for PPI pairs."""
     expected_output = ["CHD4", "CHEK2", "CIC", "CIITA", "CLIP1", "CLTC", 
                        "CLTCL1", "CNBP", "CNOT3", "CNTRL", "COL1A1", 
@@ -73,7 +73,7 @@ def test_input_genes(infile):
         )
     ]
 )
-async def test_interaction_creation(gene_list, expected_interactions, threshold_level):
+async def test_get_interactors_success(gene_list, expected_interactions, threshold_level):
     """Test creation of PPI interactions."""
     async with aiohttp.ClientSession() as session:
         ppis = await get_interactors(session, gene_list, threshold_level)
@@ -84,7 +84,7 @@ async def test_interaction_creation(gene_list, expected_interactions, threshold_
 @pytest.mark.parametrize("test_file_path, expected_data, positive",
     [
         (
-            'test/test_data/test_ppis1.xlsx', 
+            'test/test_data/ppis_test1.xlsx', 
             {
                 'ref_ID': ['ACTN4_1', 'ACTN4_1', 'AKT1_1', 'AKT1_1', 'AKT1_1', 'BAG1_1'],
                 'alt_ID': ['ACTN4_4', 'ACTN4_4', 'AKT1_2', 'AKT1_2', 'AKT1_2', 'BAG1_2'],
@@ -94,7 +94,7 @@ async def test_interaction_creation(gene_list, expected_interactions, threshold_
             False
         ),
         (
-            'test/test_data/test_ppis2.xlsx', 
+            'test/test_data/ppis_test2.xlsx', 
             {
                 'ref_ID': ['BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1',
                      'BCL2L1_1', 'BTC_1'],
@@ -106,7 +106,7 @@ async def test_interaction_creation(gene_list, expected_interactions, threshold_
             True
         ),
         (
-            'test/test_data/test_ppis3.xlsx',
+            'test/test_data/ppis_test3.xlsx',
             {
                 'ref_ID': ['CLCN2_1', 'CLCN2_1', 'CLCN2_1', 'CLCN2_1', 'CLCN2_1'],
                 'alt_ID': ['CLCN2_2', 'CLCN2_3', 'CLCN2_4', 'CLCN2_4', 'CLCN2_5'],
@@ -117,7 +117,7 @@ async def test_interaction_creation(gene_list, expected_interactions, threshold_
         )
     ]
 )
-def test_observation_creation(test_file_path, expected_data, positive):
+def test_find_triplets_success(test_file_path, expected_data, positive):
     """Test that the observation dataframe creation function works, includes the 
     correct labels for each triplet."""
     expected_df = pd.DataFrame(data=expected_data)
@@ -125,13 +125,13 @@ def test_observation_creation(test_file_path, expected_data, positive):
     assert expected_df.equals(actual_df)
 
 
-def test_filenotfounderror_handling():
+def test_process_file_error():
     """Error handling test for a file that doesn't exist."""
     with pytest.raises(FileNotFoundError):
         actual_fname, actual_seq = process_file('../data/nonexistent.txt')
 
 
-def test_file_separation():
+def test_process_file_success():
     """Test that FASTA files are correctly separated 
     into the header and the protein sequence."""
     expected_header = '>ENSG00000002822|ENST00000455998'
@@ -144,7 +144,7 @@ ELQWSVMDQEMRVKRLESEKQELQ'''
             actual_sequences[1] == expected_sequence)
     
 
-def test_file_creation():
+def test__create_files_success():
     """Test the creation of individual FASTA files 
     from header sequence lists."""
     outfolder_name = os.path.join(os.getcwd(), 'test', 'test_data', 
