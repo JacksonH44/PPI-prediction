@@ -45,9 +45,8 @@ async def get_interactors(
     strict_evidence_list = cfg.BIOGRID_STRICT_EVIDENCE
     relaxed_evidence_list = cfg.BIOGRID_RELAXED_EVIDENCE
     evidence_list = strict_evidence_list if not relax_evidence else relaxed_evidence_list
-    throughput_level = "low" if not relax_evidence else "any"
     inter_species_excluded = "true" if not relax_evidence else "false"
-    include_interactor_interactions = "false" if not relax_evidence else "true"
+    throughput_level = "low" if not relax_evidence else "any"
     params = {
         "accesskey": cfg.BIOGRID_API_KEY,
         "format": "json",
@@ -57,7 +56,7 @@ async def get_interactors(
         "evidenceList": "|".join(evidence_list),
         "includeEvidence": "true",
         "includeInteractors": "true",
-        "includeInteractorInteractions": include_interactor_interactions,
+        "includeInteractorInteractions": "false",
         "searchNames": "true",
         "throughputTag": throughput_level,
         "taxId": 9606, # Homo Sapiens taxonomy ID
@@ -95,5 +94,5 @@ async def get_interactors(
         output_ppis = [ppi for ppi, e_id in ppis.items() if len(e_id) >= cross_study_level]
     else:
         output_ppis = ppis.keys()
-    logging.debug(f'Found a total of {len(interactions)} and generated {len(output_ppis)} high confidence PPIs...')
+    logging.debug(f'Found a total of {len(interactions)} interactions and generated {len(output_ppis)} PPIs for:\n{gene_list}')
     return output_ppis

@@ -4,10 +4,18 @@ Generate negative dataset for PPIs.
 
 
 import argparse
+import asyncio
 import logging
 import os
+import sys
+import time
 
+import aiohttp
 import pandas as pd
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from src.data.bio_apis import get_interactors
+from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 
 
 def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
@@ -34,8 +42,6 @@ def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
         how='inner',
         copy=False
     )
-    logging.debug(f'Merged dataframe:\n{merged_df.head()}')
-    logging.debug(f'Merged dataframe is of size {merged_df.shape[0]}')
     return merged_df
 
 
@@ -44,6 +50,8 @@ def parse_command_line(): # pragma: no cover
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('gene_file', type=str,
                         help='Path to CSV containing genes of interest')
+    parser.add_argument('all_genes', type=str,
+                        help='Path to CSV containing all genes (could be MANE file)')
     parser.add_argument('location_file', type=str,
                         help='Path to TSV containing subcellular locations for all genes')
     parser.add_argument('-v', '--verbose',
@@ -56,18 +64,31 @@ def parse_command_line(): # pragma: no cover
     return args
 
 
-def main(): # pragma : no cover
+async def main(): # pragma : no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/generate_negative_dataset.log")
     if not os.path.exists(logfile):
         with open(logfile, 'w') as file:
             file.write("") # Write an empty string to create the file
-    logging_level = logging.DEBUG if args.verbose else logging.WARNING
+    logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
-    logging.debug("Getting subcellular locations...")
-    get_locations(args.gene_file, args.location_file)
+    genes = parse_input_genes(args.gene_file)
+    logging.debug(f'Found {len(genes)} genes...')
+    logging.debug('Getting subcellular locations...')
+    locations_df = get_locations(args.all_genes, args.location_file)
+    logging.debug(f'Found {locations_df.shape[0]} potential protein partners for each gene (before filtering)...')
+    logging.debug('Generating all protein partners for each gene of interest...')
+    chunked_genes = chunk_input_genes(genes, 10)
+    start = time.perf_counter() # Time the function call for debugging
+    async with aiohttp.ClientSession() as session:
+        tasks = [get_interactors(session, chunk, 2, relax_evidence=True) for chunk in chunked_genes]
+        ppi_lists = await asyncio.gather(*tasks, return_exceptions=True)
+    all_ppis = [ppi for sublist in ppi_lists for ppi in sublist]
+    finish = time.perf_counter()
+    logging.info(f'Finished curation in {round(finish - start, 2)} second(s)')
+    logging.info(f'Curated a total of {len(all_ppis)} PPIs...')
 
 
 if __name__ == '__main__': # pragma : no cover
-    main()
+    asyncio.run(main())

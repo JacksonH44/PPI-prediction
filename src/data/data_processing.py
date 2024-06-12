@@ -66,3 +66,10 @@ def parse_input_genes(infile) -> list:
     df = pd.read_csv(infile)
     input_genes = df.iloc[:, 0].tolist()
     return input_genes
+
+
+def chunk_input_genes(input_genes: list, chunk_size: int = 20) -> list:
+    """Chunk input genes since the Biogrid API is limited to returning
+    10,000 interactions."""
+    chunked_list = [input_genes[i:i + chunk_size] for i in range(0, len(input_genes), chunk_size)]
+    return chunked_list

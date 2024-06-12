@@ -6,10 +6,10 @@ import pandas as pd
 
 from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
-from src.data.data_processing import remove_ground_truth_data
+from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
 from src.data.generate_negative_dataset import get_locations
-from src.data.generate_positive_dataset import chunk_input_genes, get_interactors, parse_input_genes
+from src.data.generate_positive_dataset import get_interactors
 
 
 def test_get_locations_success():

@@ -16,7 +16,7 @@ import aiohttp
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
-from src.data.data_processing import parse_input_genes, remove_ground_truth_data
+from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 
 
 def write_ppi_file(ppi_list, outfile):
@@ -31,13 +31,6 @@ def write_ppi_file(ppi_list, outfile):
         writer = csv.writer(csvfile)
         writer.writerow(['gene_symbol_a', 'gene_symbol_b'])
         writer.writerows(rows)
-
-
-def chunk_input_genes(input_genes: list, chunk_size: int = 60) -> list:
-    """Chunk input genes since the Biogrid API is limited to returning
-    10,000 interactions."""
-    chunked_list = [input_genes[i:i + chunk_size] for i in range(0, len(input_genes), chunk_size)]
-    return chunked_list
 
 
 def parse_command_line(): # pragma: no cover
@@ -64,7 +57,7 @@ async def main(): # pragma: no cover
     if not os.path.exists(logfile):
         with open(logfile, 'w') as file:
             file.write("") # Write an empty string to create the file
-    logging_level = logging.DEBUG if args.verbose else logging.WARNING
+    logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
     input_genes = parse_input_genes(args.infile)
     chunked_genes = chunk_input_genes(input_genes)
