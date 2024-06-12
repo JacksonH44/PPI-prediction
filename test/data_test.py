@@ -4,6 +4,7 @@ import os
 import aiohttp
 import pandas as pd
 
+from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
