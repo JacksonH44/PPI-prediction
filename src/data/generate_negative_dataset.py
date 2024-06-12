@@ -14,6 +14,7 @@ import aiohttp
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 
@@ -64,7 +65,7 @@ def parse_command_line(): # pragma: no cover
     return args
 
 
-async def main(): # pragma : no cover
+async def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/generate_negative_dataset.log")
@@ -73,13 +74,22 @@ async def main(): # pragma : no cover
             file.write("") # Write an empty string to create the file
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
-    genes = parse_input_genes(args.gene_file)
-    logging.debug(f'Found {len(genes)} genes...')
+    input_genes = parse_input_genes(args.gene_file)
+    ground_truth_out_genes = remove_ground_truth_data(
+        input_genes,
+        cfg.GROUND_TRUTH_PATH,
+        cfg.GROUND_TRUTH_SHEET,
+        cfg.GROUND_TRUTH_COLUMN,
+        cfg.TRIPLET_FILE
+    )
+    logging.debug(f'Found {len(ground_truth_out_genes)} genes from {len(input_genes)} after removing ground truth genes...')
+    # Generate a list of all possible proteins a protein of interest could interact with
+    # and get subcellular location
     logging.debug('Getting subcellular locations...')
     locations_df = get_locations(args.all_genes, args.location_file)
     logging.debug(f'Found {locations_df.shape[0]} potential protein partners for each gene (before filtering)...')
     logging.debug('Generating all protein partners for each gene of interest...')
-    chunked_genes = chunk_input_genes(genes, 10)
+    chunked_genes = chunk_input_genes(ground_truth_out_genes, 10)
     start = time.perf_counter() # Time the function call for debugging
     async with aiohttp.ClientSession() as session:
         tasks = [get_interactors(session, chunk, 2, relax_evidence=True) for chunk in chunked_genes]
@@ -90,5 +100,5 @@ async def main(): # pragma : no cover
     logging.info(f'Curated a total of {len(all_ppis)} PPIs...')
 
 
-if __name__ == '__main__': # pragma : no cover
+if __name__ == '__main__': # pragma: no cover
     asyncio.run(main())

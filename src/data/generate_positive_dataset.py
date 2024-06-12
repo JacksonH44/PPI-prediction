@@ -60,7 +60,15 @@ async def main(): # pragma: no cover
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode='w')
     input_genes = parse_input_genes(args.infile)
-    chunked_genes = chunk_input_genes(input_genes)
+    ground_truth_out_genes = remove_ground_truth_data(
+        input_genes,
+        cfg.GROUND_TRUTH_PATH,
+        cfg.GROUND_TRUTH_SHEET,
+        cfg.GROUND_TRUTH_COLUMN,
+        cfg.TRIPLET_FILE
+    )
+    logging.debug(f'Found {len(ground_truth_out_genes)} genes from {len(input_genes)} after removing ground truth genes...')
+    chunked_genes = chunk_input_genes(ground_truth_out_genes)
     start = time.perf_counter() # Time the function call for debugging
     # Make the API calls asynchronously
     async with aiohttp.ClientSession() as session:
@@ -72,15 +80,8 @@ async def main(): # pragma: no cover
     logging.info(f'Curated a total of {len(ppis)} high confidence PPIs...')
     logging.debug('Removing ground truth PPIs...')
     # Remove PPIs that include a protein from the ground truth data
-    ground_truth_out_ppis = remove_ground_truth_data(
-        ppis,
-        cfg.GROUND_TRUTH_PATH,
-        cfg.GROUND_TRUTH_SHEET,
-        cfg.GROUND_TRUTH_COLUMN,
-        cfg.TRIPLET_FILE
-    )
-    logging.info(f'Curated a total of {len(ground_truth_out_ppis)} unbiased PPIs...')
-    write_ppi_file(ground_truth_out_ppis, args.outfile)
+    logging.info(f'Curated a total of {len(ppis)} unbiased PPIs...')
+    write_ppi_file(ppis, args.outfile)
 
 
 if __name__ == '__main__': # pragma: no cover

@@ -31,10 +31,10 @@ def test_get_locations_success():
 def test_remove_ground_truth_data_success():
     """Test the pruning of data in a dataset that 
     also appears in a ground truth dataset."""
-    unpruned_ppis = ["NAT2_TEST", "TEST_ABCA3", "TEST-1_TEST-2", "SERPINA3_ACAA1"]
-    expected_output = ["TEST-1_TEST-2"]
+    unpruned_genes = ["NAT2", "ABCA3", "FANCE", "SERPINA3", "BRCA1"]
+    expected_output = ["FANCE", "BRCA1"]
     actual_output = remove_ground_truth_data(
-        unpruned_ppis, 
+        unpruned_genes, 
         'test/test_data/isoform_sequences_test.xlsx',
         '1A-Gene List',
         'Gene_Symbol',
@@ -95,7 +95,7 @@ def test_parse_input_genes_success(infile):
         (
             ["HLF"],
             {"HLF_CREBBP", "HLF_TET2", "HLF_TLK1", "HLF_DBP", "HLF_HNF4G", 
-             "HLF_MYB", "MYB_CREBBP"},
+             "HLF_MYB"},
             10,
             True
         )

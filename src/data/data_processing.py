@@ -8,15 +8,15 @@ import pandas as pd
 
 
 def remove_ground_truth_data(
-        unpruned_ppis: list, 
+        genes: list, 
         reference_file_path: str, 
         sheet_name: str,
         column_name: str,
         triplet_file: str
 ) -> list:
     """
-    Remove PPIs from a dataset that were tested in Y2H
-    in the ground truth isoform dataset.
+    Remove genes from a dataset that were experimentally tested in 
+    some reference dataset specified by an excel file.
 
     Parameters
     ----------
@@ -34,31 +34,15 @@ def remove_ground_truth_data(
         isoform interactions. Expected headers are ref_ID and bait_ID.
         Expects a CSV.
     """
-    def is_interaction_valid(interaction, gene_set, interaction_set) -> bool:
-        """Determines whether a given PPI from the unpruned
-        PPIs contains any proteins that were tested in the
-        ground truth dataset."""
-        protein_1, protein_2 = interaction.split('_')
-        return protein_1 not in gene_set and protein_2 not in gene_set and interaction not in interaction_set
-    
     # Read in all reference genes
-    genes_df = pd.read_excel(
+    ground_truth_genes_df = pd.read_excel(
         reference_file_path, 
         sheet_name=sheet_name,
         usecols=[column_name],
         engine='calamine'
     )
-    gene_set = set(genes_df[column_name])
-    # Read in all experimentally validated interactions
-    experimental_interactions = pd.read_csv(
-        triplet_file,
-        usecols = ['ref_ID', 'bait_ID']
-    )
-    ref_bait_strings = experimental_interactions['ref_ID'].astype(str) + '_' + experimental_interactions['bait_ID'].astype(str)
-    bait_ref_strings = experimental_interactions['bait_ID'].astype(str) + '_' + experimental_interactions['ref_ID'].astype(str)
-    interaction_set = set(ref_bait_strings).union(set(bait_ref_strings))
-    filtered_interactions = [interaction for interaction in unpruned_ppis if is_interaction_valid(interaction, gene_set, interaction_set)]
-    return filtered_interactions
+    ground_truth_gene_set = set(ground_truth_genes_df[column_name])
+    return [gene for gene in genes if gene not in ground_truth_gene_set]
 
 
 def parse_input_genes(infile) -> list:
