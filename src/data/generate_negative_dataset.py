@@ -10,7 +10,7 @@ import os
 import pandas as pd
 
 
-def get_locations(gene_file, location_file):
+def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
     """Get subcellular locations for all genes in the file."""
     gene_df = pd.read_csv(
         gene_file,
@@ -36,6 +36,7 @@ def get_locations(gene_file, location_file):
     )
     logging.debug(f'Merged dataframe:\n{merged_df.head()}')
     logging.debug(f'Merged dataframe is of size {merged_df.shape[0]}')
+    return merged_df
 
 
 def parse_command_line(): # pragma: no cover

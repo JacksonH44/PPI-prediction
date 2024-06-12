@@ -7,7 +7,24 @@ import pandas as pd
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
+from src.data.generate_negative_dataset import get_locations
 from src.data.generate_positive_dataset import chunk_input_genes, get_interactors, parse_input_genes
+
+
+def test_get_locations_success():
+    """Test the function that gets subcellular locations for all genes."""
+    expected_data = {
+        'Gene name': ['CHD4', 'CHEK2', 'CIC', 'CRLF2'],
+        'Reliability': ['Enhanced', 'Supported', 'Supported', 'Approved'],
+        'Main location': ['Nucleoplasm', 'Nucleoplasm', 'Nucleoplasm', 
+                          'Plasma membrane']
+    }
+    expected_result = pd.DataFrame(data=expected_data)
+    actual_result = get_locations(
+        'test/test_data/MANE_GencodeID_test.csv',
+        'test/test_data/subcellular_location_test.csv'
+    )
+    assert expected_result.equals(actual_result)
 
 
 def test_remove_ground_truth_data_success():

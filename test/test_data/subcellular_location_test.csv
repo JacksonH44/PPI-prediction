@@ -1,0 +1,7 @@
+Gene	Gene name	Reliability	Main location	Additional location	Extracellular location	Enhanced	Supported	Approved	Uncertain	Single-cell variation intensity	Single-cell variation spatial	Cell cycle dependency	GO id
+ENSG00000111642	CHD4	Enhanced	Nucleoplasm			Nucleoplasm							Nucleoplasm (GO:0005654)
+ENSG00000183765	CHEK2	Supported	Nucleoplasm	Golgi apparatus			Nucleoplasm		Golgi apparatus				Golgi apparatus (GO:0005794);Nucleoplasm (GO:0005654)
+ENSG00000079432	CIC	Supported	Nucleoplasm	Vesicles			Nucleoplasm	Vesicles					Nucleoplasm (GO:0005654);Vesicles (GO:0043231)
+	Nucleoplasm	Nuclear bodies			Nuclear bodies;Nucleoplasm			Nuclear bodies			Nuclear bodies (GO:0016604);Nucleoplasm (GO:0005654)
+ENSG00000205755	CRLF2	Approved	Plasma membrane					Plasma membrane					Plasma membrane (GO:0005886)
+ENSG00000112039	FANCE	Supported	Nucleoplasm	Centrosome;Mitotic chromosome			Nucleoplasm	Mitotic chromosome	Centrosome			Mitotic chromosome (biological definition)	Centrosome (GO:0005813);Mitotic chromosome (GO:0005694);Nucleoplasm (GO:0005654)
