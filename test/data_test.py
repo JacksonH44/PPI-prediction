@@ -8,8 +8,29 @@ from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
-from src.data.generate_negative_dataset import get_locations
+from src.data.generate_negative_dataset import find_interacting_proteins, get_locations
 from src.data.generate_positive_dataset import get_interactors
+
+
+@pytest.mark.parametrize(
+        "ppis",
+        [
+            (
+                ["HLF_FANCE", "HLF_BRCA1", "BRCA1_FANCE", "HOOK3_HOOK3"]
+            )
+        ]
+)
+def test_find_interacting_proteins_success(ppis):
+    """Test the function that maps a list of protein-protein interaction
+    pairs to a hashmap of protein : partners pairs."""
+    expected_result = {
+        "HLF": {"FANCE", "BRCA1"},
+        "FANCE": {"HLF", "BRCA1"},
+        "BRCA1": {"HLF", "FANCE"},
+        "HOOK3": {"HOOK3"}
+    }
+    actual_result = find_interacting_proteins(ppis)
+    assert actual_result == expected_result
 
 
 def test_get_locations_success():

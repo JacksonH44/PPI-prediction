@@ -5,6 +5,7 @@ Generate negative dataset for PPIs.
 
 import argparse
 import asyncio
+from collections import defaultdict
 import logging
 import os
 import sys
@@ -17,6 +18,62 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
+
+
+def find_subcellular_proteins(locations_df) -> defaultdict:
+    """Find all potential proteins that are in the same
+    subcellular location as a gene."""
+    pass
+
+
+def find_interacting_proteins(all_ppis) -> defaultdict:
+    """Find all proteins that have been recorded to 
+    interact with a protein produced by the gene."""
+    protein_dict = defaultdict(set)
+    for pair in all_ppis:
+        protein_a, protein_b = pair.split('_')
+        protein_dict[protein_a].add(protein_b)
+        protein_dict[protein_b].add(protein_a)
+    return protein_dict
+
+
+def find_unsuitable_partners(
+        genes: list,
+        locations_df: pd.DataFrame,
+        all_ppis: list
+) -> defaultdict:
+    """
+    Find all unsuitable partners for a list of genes and return
+    a mapping of a gene to its unsuitable partners. By finding 
+    unsuitable protein partners for a gene we save space as the 
+    number of unsuitable partners for a gene is likely much less than
+    the number of suitable partners.
+    
+    Parameters
+    ----------
+    genes : list
+        A list of the genes of interest
+    locations_df : pd.DataFrame
+        A dataframe of all genes you are considering for the negative set
+        and their subcellular locations
+    all_ppis: list
+        A list of all recorded protein-protein interactions involving at least
+        one of the genes in the genes of interest list
+    
+    Returns
+    -------
+    unsuitable_partners : defaultdict
+        key-value pairs where the gene of interest is the key and all the 
+        proteins that are unsuitable to use as negative cases in a dataset 
+        (in the same subcellular location or involved in a recorded PPI with
+        the gene of interest).
+    """
+    unsuitable_partners = defaultdict(set)
+    interacting_proteins = find_interacting_proteins(all_ppis)
+    same_subcellular_proteins = find_subcellular_proteins(locations_df)
+    for gene in genes:
+        unsuitable_partners[gene] = interacting_proteins[gene] | same_subcellular_proteins[gene] # Set union
+    return unsuitable_partners
 
 
 def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
@@ -98,6 +155,8 @@ async def main(): # pragma: no cover
     finish = time.perf_counter()
     logging.info(f'Finished curation in {round(finish - start, 2)} second(s)')
     logging.info(f'Curated a total of {len(all_ppis)} PPIs...')
+    logging.debug('Finding unsuitable partners for each gene...')
+    unsuitable_partners = find_unsuitable_partners(ground_truth_out_genes, locations_df, all_ppis)
 
 
 if __name__ == '__main__': # pragma: no cover
