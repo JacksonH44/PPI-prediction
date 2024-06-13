@@ -23,7 +23,19 @@ from src.data.data_processing import chunk_input_genes, parse_input_genes, remov
 def find_subcellular_proteins(locations_df) -> defaultdict:
     """Find all potential proteins that are in the same
     subcellular location as a gene."""
-    return defaultdict(set)
+    locations_to_genes = defaultdict(set)
+    for _, row in locations_df.iterrows():
+        gene = row['Gene name']
+        locations = row['Main location']
+        for location in locations.split(';'):
+            locations_to_genes[location].add(gene)
+    
+    genes_sharing_locations = defaultdict(set)
+    for genes in locations_to_genes.values():
+        for gene in genes:
+            # Add the gene itself to the off limits proteins to not allow for self-interactions
+            genes_sharing_locations[gene] = genes_sharing_locations[gene] | genes
+    return genes_sharing_locations
 
 
 def find_interacting_proteins(all_ppis) -> defaultdict:
@@ -72,6 +84,8 @@ def find_unsuitable_partners(
     interacting_proteins = find_interacting_proteins(all_ppis)
     logging.debug(f'Found interacting proteins for {len(interacting_proteins.keys())} genes...')
     same_subcellular_proteins = find_subcellular_proteins(locations_df)
+    logging.debug(f'''Found proteins with the same subcellular location for 
+                  {len(same_subcellular_proteins.keys())} genes...''')
     for gene in genes:
         unsuitable_partners[gene] = interacting_proteins[gene] | same_subcellular_proteins[gene] # Set union
     return unsuitable_partners
@@ -91,8 +105,8 @@ def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
         sep='\t',
         usecols=['Gene name', 'Reliability', 'Main location']
     )
-    # Select for only reliablly found gene locations
-    location_df = location_df[location_df['Reliability'] != 'Uncertain']
+    # Select for only reliablly found gene locations and have a main location
+    location_df = location_df[(location_df['Reliability'] != 'Uncertain') & (location_df['Main location'].notna())]
     logging.debug(f'Head of location dataframe:\n{location_df.head()}')
     logging.debug('Merging dataframes...')
     merged_df = gene_df.merge( 

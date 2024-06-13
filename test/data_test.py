@@ -8,8 +8,47 @@ from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
-from src.data.generate_negative_dataset import find_interacting_proteins, get_locations
+from src.data.generate_negative_dataset import find_interacting_proteins, find_subcellular_proteins, get_locations
 from src.data.generate_positive_dataset import get_interactors
+
+
+@pytest.mark.parametrize("location_data, expected_result",
+        [
+            (
+                {
+                    "Gene name": ["CHD4", "CHEK2", "CIC", "CRLF2"],
+                    "Reliability": ["Approved", "Enhanced", "Approved", "Approved"],
+                    "Main location": ["Nucleoplasm", "Nucleoplasm", "Nucleoplasm", "Plasma membrane"]
+                },
+                {
+                    "CHD4": {"CHEK2", "CIC", "CHD4"},
+                    "CHEK2": {"CHD4", "CIC", "CHEK2"},
+                    "CIC": {"CHEK2", "CHD4", "CIC"},
+                    "CRLF2": {"CRLF2"}
+                }
+            ),
+            (
+                {
+                    "Gene name": ["MDN1", "SASH1", "CILK1", "HINT3"],
+                    "Reliability": ["Approved", "Approved", "Approved", "Enhanced"],
+                    "Main location": ["Cytosol;Nucleoli", "Cytosol;Nucleoplasm", 
+                                      "Nucleoli fibrillar center", "Mitochondria;Nucleoli"]
+                },
+                {
+                    "MDN1": {"SASH1", "HINT3", "MDN1"},
+                    "SASH1": {"MDN1", "SASH1"},
+                    "CILK1": {"CILK1"},
+                    "HINT3": {"MDN1", "HINT3"}
+                }
+            )
+        ]
+)
+def test_find_subcellular_proteins(location_data, expected_result):
+    """Test the ability to map a dataframe of proteins and their main locations to 
+    a hashmap of protein : proteins with same location pairs."""
+    locations_df = pd.DataFrame(data=location_data)
+    actual_result = find_subcellular_proteins(locations_df)
+    assert actual_result == expected_result
 
 
 @pytest.mark.parametrize(
