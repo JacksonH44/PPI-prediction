@@ -173,6 +173,8 @@ async def main(): # pragma: no cover
     logging.debug('Finding unsuitable partners for each gene...')
     unsuitable_partners = find_unsuitable_partners(ground_truth_out_genes, locations_df, all_ppis)
     logging.debug(f'Found unsuitable partners for {len(unsuitable_partners)} genes...')
+    logging.debug(f'''EXAMPLE: Unsuitable partners for HLF 
+                  ({len(unsuitable_partners["HLF"])} total):\n{unsuitable_partners["HLF"]}''')
 
 
 if __name__ == '__main__': # pragma: no cover

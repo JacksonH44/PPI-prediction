@@ -8,8 +8,46 @@ from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
-from src.data.generate_negative_dataset import find_interacting_proteins, find_subcellular_proteins, get_locations
+from src.data.generate_negative_dataset import (
+    find_interacting_proteins, 
+    find_subcellular_proteins, 
+    find_unsuitable_partners, 
+    get_locations
+)
 from src.data.generate_positive_dataset import get_interactors
+
+
+@pytest.mark.parametrize("genes, locations_data, all_ppis, expected_result", 
+    [
+        (
+            ["BRCA1", "FANCE", "HLF"],
+            {
+                "Gene name": ["BRCA1", "FANCE", "HLF", "SMURF1", "KIT"],
+                "Reliability": ["Supported", "Supported", "Enhanced", "Approved",
+                                "Supported"],
+                "Main location": ["Nuclear bodies;Nucleoplasm", "Nucleoplasm",
+                                  "Nucleoplasm", "Vesicles", "Plasma membrane"]
+            },
+            ["BRCA1*SMURF1", "KIT*FANCE", "BRCA1*HLF", "HLF*HLF"],
+            {
+                "BRCA1": {"BRCA1", "FANCE", "HLF", "SMURF1"},
+                "FANCE": {"FANCE", "BRCA1", "HLF", "KIT"},
+                "HLF": {"HLF", "BRCA1", "FANCE"}
+            }
+        )
+    ]
+)
+def test_find_unsuitable_partners_success(
+    genes,
+    locations_data,
+    all_ppis,
+    expected_result
+):
+    """Test the functionality of finding all unsuitable partners for a list of 
+    genes"""
+    locations_df = pd.DataFrame(data=locations_data)
+    actual_result = find_unsuitable_partners(genes, locations_df, all_ppis)
+    assert actual_result == expected_result
 
 
 @pytest.mark.parametrize("location_data, expected_result",
