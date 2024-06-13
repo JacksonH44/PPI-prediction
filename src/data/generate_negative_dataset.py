@@ -23,7 +23,7 @@ from src.data.data_processing import chunk_input_genes, parse_input_genes, remov
 def find_subcellular_proteins(locations_df) -> defaultdict:
     """Find all potential proteins that are in the same
     subcellular location as a gene."""
-    pass
+    return defaultdict(set)
 
 
 def find_interacting_proteins(all_ppis) -> defaultdict:
@@ -31,7 +31,7 @@ def find_interacting_proteins(all_ppis) -> defaultdict:
     interact with a protein produced by the gene."""
     protein_dict = defaultdict(set)
     for pair in all_ppis:
-        protein_a, protein_b = pair.split('_')
+        protein_a, protein_b = pair.split('*')
         protein_dict[protein_a].add(protein_b)
         protein_dict[protein_b].add(protein_a)
     return protein_dict
@@ -70,6 +70,7 @@ def find_unsuitable_partners(
     """
     unsuitable_partners = defaultdict(set)
     interacting_proteins = find_interacting_proteins(all_ppis)
+    logging.debug(f'Found interacting proteins for {len(interacting_proteins.keys())} genes...')
     same_subcellular_proteins = find_subcellular_proteins(locations_df)
     for gene in genes:
         unsuitable_partners[gene] = interacting_proteins[gene] | same_subcellular_proteins[gene] # Set union
@@ -157,6 +158,7 @@ async def main(): # pragma: no cover
     logging.info(f'Curated a total of {len(all_ppis)} PPIs...')
     logging.debug('Finding unsuitable partners for each gene...')
     unsuitable_partners = find_unsuitable_partners(ground_truth_out_genes, locations_df, all_ppis)
+    logging.debug(f'Found unsuitable partners for {len(unsuitable_partners)} genes...')
 
 
 if __name__ == '__main__': # pragma: no cover

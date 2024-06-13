@@ -26,7 +26,7 @@ def write_ppi_file(ppi_list, outfile):
     logging.debug(f'Writing to directory {os.path.abspath(outfile)}...')
     os.makedirs(os.path.abspath(os.path.join(os.path.dirname(outfile))), exist_ok=True)
     ppi_list.sort()
-    rows = [pair.split('_') for pair in ppi_list]
+    rows = [pair.split('*') for pair in ppi_list]
     with open(outfile, 'w') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['gene_symbol_a', 'gene_symbol_b'])

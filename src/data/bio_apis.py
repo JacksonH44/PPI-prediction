@@ -80,15 +80,15 @@ async def get_interactors(
         sym_b = interaction['OFFICIAL_SYMBOL_B']
         # Ensure pair is not already in the dataset
         experimental_id = f'{interaction["PUBMED_ID"]}_{interaction["EXPERIMENTAL_SYSTEM"]}'
-        if f'{sym_a}_{sym_b}' in ppis:
-            ppis[f'{sym_a}_{sym_b}'].add(experimental_id)
-        elif f'{sym_b}_{sym_a}' in ppis:
-            ppis[f'{sym_b}_{sym_a}'].add(experimental_id)
+        if f'{sym_a}*{sym_b}' in ppis:
+            ppis[f'{sym_a}*{sym_b}'].add(experimental_id)
+        elif f'{sym_b}*{sym_a}' in ppis:
+            ppis[f'{sym_b}*{sym_a}'].add(experimental_id)
         # Write cancer driver gene first
         elif sym_a in gene_list:
-            ppis[f'{sym_a}_{sym_b}'] = {experimental_id}
+            ppis[f'{sym_a}*{sym_b}'] = {experimental_id}
         else: # Gene b in gene_list
-            ppis[f'{sym_b}_{sym_a}'] = {experimental_id}
+            ppis[f'{sym_b}*{sym_a}'] = {experimental_id}
     # In the case of strict evidence, filter PPIs by number of cross-references
     if not relax_evidence:
         output_ppis = [ppi for ppi, e_id in ppis.items() if len(e_id) >= cross_study_level]

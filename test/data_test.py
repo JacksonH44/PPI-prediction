@@ -16,7 +16,7 @@ from src.data.generate_positive_dataset import get_interactors
         "ppis",
         [
             (
-                ["HLF_FANCE", "HLF_BRCA1", "BRCA1_FANCE", "HOOK3_HOOK3"]
+                ["HLF*FANCE", "HLF*BRCA1", "BRCA1*FANCE", "HOOK3*HOOK3"]
             )
         ]
 )
@@ -93,17 +93,17 @@ def test_parse_input_genes_success(infile):
     [
         (
             ["FANCE"],
-            {"FANCE_FANCC", "FANCE_FANCA", "FANCE_FANCD2", "FANCE_FANCF", 
-             "FANCE_FANCM", "FANCE_FANCG", "FANCE_HES1", "FANCE_APITD1",
-             "FANCE_STRA13"},
+            {"FANCE*FANCC", "FANCE*FANCA", "FANCE*FANCD2", "FANCE*FANCF", 
+             "FANCE*FANCM", "FANCE*FANCG", "FANCE*HES1", "FANCE*APITD1",
+             "FANCE*STRA13"},
              2,
              False
         ),
         (
             ["ASXL1", "SS18"],
-            {"ASXL1_BAP1", "ASXL1_FOXK1", "ASXL1_FOXK2", "ASXL1_HCFC1",
-             "ASXL1_HIST1H1C", "ASXL1_AKT1", "SS18_SMARCA2", "SS18_SMARCB1",
-             "SS18_RBM14"},
+            {"ASXL1*BAP1", "ASXL1*FOXK1", "ASXL1*FOXK2", "ASXL1*HCFC1",
+             "ASXL1*HIST1H1C", "ASXL1*AKT1", "SS18*SMARCA2", "SS18*SMARCB1",
+             "SS18*RBM14"},
             3,
             False
         ),
@@ -115,8 +115,8 @@ def test_parse_input_genes_success(infile):
         ),
         (
             ["HLF"],
-            {"HLF_CREBBP", "HLF_TET2", "HLF_TLK1", "HLF_DBP", "HLF_HNF4G", 
-             "HLF_MYB"},
+            {"HLF*CREBBP", "HLF*TET2", "HLF*TLK1", "HLF*DBP", "HLF*HNF4G", 
+             "HLF*MYB"},
             10,
             True
         )
