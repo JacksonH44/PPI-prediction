@@ -5,7 +5,6 @@ Generate positive dataset for PPIs.
 
 import argparse
 import asyncio
-import csv
 import logging
 import os
 import sys
@@ -16,21 +15,12 @@ import aiohttp
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
-from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
-
-
-def write_ppi_file(ppi_list, outfile):
-    """Write the protein-protein interactions to a csv file with columns
-    gene_name_a, gene_name_b where a is the gene of interest (e.g., cancer
-    driver genes) and b is the interacting protein."""
-    logging.debug(f'Writing to directory {os.path.abspath(outfile)}...')
-    os.makedirs(os.path.abspath(os.path.join(os.path.dirname(outfile))), exist_ok=True)
-    ppi_list.sort()
-    rows = [pair.split('*') for pair in ppi_list]
-    with open(outfile, 'w') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['gene_symbol_a', 'gene_symbol_b'])
-        writer.writerows(rows)
+from src.data.data_processing import (
+    chunk_input_genes,
+    parse_input_genes,
+    remove_ground_truth_data,
+    write_ppi_file
+)
 
 
 def parse_command_line(): # pragma: no cover

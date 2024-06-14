@@ -6,6 +6,7 @@ Generate negative dataset for PPIs.
 import argparse
 import asyncio
 from collections import defaultdict
+import csv
 import logging
 import os
 import sys
@@ -18,6 +19,42 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
+
+
+def count_gene_symbols(positive_ppis): 
+    """Count the number of each gene symbol in the positve dataset."""
+    gene_count = defaultdict(int)
+    # Error checking
+    if not os.path.isfile(positive_ppis):
+        raise FileNotFoundError(f'''The file {positive_ppis} does not exist. 
+                                Have you created the positive dataset first 
+                                (generate_positive_dataset.py)?''')
+    with open(positive_ppis, 'r') as pos:
+        csv_reader = csv.DictReader(pos)
+        for row in csv_reader:
+            gene_count[row['gene_symbol_a']] += 1
+    return dict(gene_count)
+
+
+def undersample_dataset(
+        locations_df : pd.DataFrame, 
+        positive_ppis : str,
+        unsuitable_partners : dict
+):
+    """
+    Create a list of negative PPIs where the number of PPIs for each 
+    gene of interest is the same as in the positive dataset.
+
+    Parameters
+    ----------
+    locations_df : pd.DataFrame
+        A dataframe of all potential partners a protein could have
+    positive_ppis : str
+        Path to the file holding all positive PPIs
+    unsuitable_partners : dict
+        A map of gene : unsuitable_partner pairs
+    """
+    all_proteins = set(locations_df['Gene name'])
 
 
 def find_subcellular_proteins(locations_df) -> defaultdict:
@@ -121,12 +158,18 @@ def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
 def parse_command_line(): # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('gene_file', type=str,
+    parser.add_argument('-g', '--gene_file', type=str,
+                        default='data/raw/cancer_driver_gene_list.csv',
                         help='Path to CSV containing genes of interest')
-    parser.add_argument('all_genes', type=str,
+    parser.add_argument('-a','--all_genes', type=str,
+                        default='data/raw/MANE_GencodeID.csv',
                         help='Path to CSV containing all genes (could be MANE file)')
-    parser.add_argument('location_file', type=str,
+    parser.add_argument('-c', '--location_file', type=str,
+                        default='data/raw/subcellular_location.csv',
                         help='Path to TSV containing subcellular locations for all genes')
+    parser.add_argument('-p', '--positive_dataset', type=str,
+                        default='data/processed/positive_ppis.csv',
+                        help='Path to CSV file fo positive PPI dataset')
     parser.add_argument('-v', '--verbose',
                         action='store_true',
                         help='Change logging level from default level to noisiest level')
@@ -174,7 +217,8 @@ async def main(): # pragma: no cover
     unsuitable_partners = find_unsuitable_partners(ground_truth_out_genes, locations_df, all_ppis)
     logging.debug(f'Found unsuitable partners for {len(unsuitable_partners)} genes...')
     logging.debug(f'''EXAMPLE: Unsuitable partners for HLF 
-                  ({len(unsuitable_partners["HLF"])} total):\n{unsuitable_partners["HLF"]}''')
+                  ({len(unsuitable_partners["HLF"])} total)''')
+    logging.debug(f'Undersampling to create negative dataset...')
 
 
 if __name__ == '__main__': # pragma: no cover

@@ -9,12 +9,40 @@ from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
 from src.data.fasta_one_to_many import _create_files, process_file
 from src.data.generate_negative_dataset import (
+    count_gene_symbols,
     find_interacting_proteins, 
     find_subcellular_proteins, 
     find_unsuitable_partners, 
     get_locations
 )
 from src.data.generate_positive_dataset import get_interactors
+
+
+def test_count_gene_symbols_error():
+    """Test that the function properly throws a 
+    FileNotFoundError when the positive dataset
+    hasn't been generated yet."""
+    with pytest.raises(FileNotFoundError):
+        count_gene_symbols('dummy.txt')
+
+
+@pytest.mark.parametrize("positive_ppis, expected_result",
+    [
+        (
+            "test/test_data/positive_ppis_test.csv",
+            {
+                "ABI1": 4,
+                "ABL1": 2,
+                "AR": 3
+            }
+        )
+    ]
+)
+def test_count_gene_symbols_success(positive_ppis, expected_result):
+    """Test the happy path for counting gene symbols 
+    from the positive dataset."""
+    actual_result = count_gene_symbols(positive_ppis)
+    assert actual_result == expected_result
 
 
 @pytest.mark.parametrize("genes, locations_data, all_ppis, expected_result", 
@@ -135,8 +163,7 @@ def test_remove_ground_truth_data_success():
         unpruned_genes, 
         'test/test_data/isoform_sequences_test.xlsx',
         '1A-Gene List',
-        'Gene_Symbol',
-        'data/interim/triplets.csv'
+        'Gene_Symbol'
     )
     assert actual_output == expected_output
 
