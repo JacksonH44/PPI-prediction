@@ -22,8 +22,11 @@ NCBI_BASE_URL = data["ncbi"]["base_url"]
 
 BIOGRID_API_KEY = data["biogrid"]["api_key"]
 BIOGRID_BASE_URL = data["biogrid"]["base_url"]
+BIOGRID_STRICT_EVIDENCE = data["biogrid"]["strict_evidence"]
+BIOGRID_RELAXED_EVIDENCE = data["biogrid"]["relaxed_evidence"]
 
 GROUND_TRUTH_PATH = data["ground_truth"]["file_path"]
 GROUND_TRUTH_SHEET = data["ground_truth"]["sheet_name"]
 GROUND_TRUTH_COLUMN = data["ground_truth"]["column"]
-TRIPLET_FILE = data["ground_truth"]["triplet"]
+
+SEED = data["random"]["seed"]

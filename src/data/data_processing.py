@@ -4,19 +4,40 @@ data observations from a dataset.
 """
 
 
+import csv
+import logging
+import os
+
 import pandas as pd
 
 
+class UndersamplingError(Exception):
+    """A class that represents an error in the undersampling process."""
+    pass
+
+def chunk_input_genes(input_genes: list, chunk_size: int = 20) -> list:
+    """Chunk input genes since the Biogrid API is limited to returning
+    10,000 interactions."""
+    chunked_list = [input_genes[i:i + chunk_size] for i in range(0, len(input_genes), chunk_size)]
+    return chunked_list
+
+
+def parse_input_genes(infile) -> list:
+    """Parse the input file and return a list of official gene symbols."""
+    df = pd.read_csv(infile)
+    input_genes = df.iloc[:, 0].tolist()
+    return input_genes
+
+
 def remove_ground_truth_data(
-        unpruned_ppis: list, 
+        genes: list, 
         reference_file_path: str, 
         sheet_name: str,
-        column_name: str,
-        triplet_file: str
+        column_name: str
 ) -> list:
     """
-    Remove PPIs from a dataset that were tested in Y2H
-    in the ground truth isoform dataset.
+    Remove genes from a dataset that were experimentally tested in 
+    some reference dataset specified by an excel file.
 
     Parameters
     ----------
@@ -29,40 +50,27 @@ def remove_ground_truth_data(
         The name of the sheet with gene names
     column_name: str
         The header for the column with gene names
-    triplet_file: str
-        The path to the file of experimentally validated isoform-
-        isoform interactions. Expected headers are ref_ID and bait_ID.
-        Expects a CSV.
     """
-    def is_interaction_valid(interaction, gene_set, interaction_set) -> bool:
-        """Determines whether a given PPI from the unpruned
-        PPIs contains any proteins that were tested in the
-        ground truth dataset."""
-        protein_1, protein_2 = interaction.split('_')
-        return protein_1 not in gene_set and protein_2 not in gene_set and interaction not in interaction_set
-    
     # Read in all reference genes
-    genes_df = pd.read_excel(
+    ground_truth_genes_df = pd.read_excel(
         reference_file_path, 
         sheet_name=sheet_name,
         usecols=[column_name],
         engine='calamine'
     )
-    gene_set = set(genes_df[column_name])
-    # Read in all experimentally validated interactions
-    experimental_interactions = pd.read_csv(
-        triplet_file,
-        usecols = ['ref_ID', 'bait_ID']
-    )
-    ref_bait_strings = experimental_interactions['ref_ID'].astype(str) + '_' + experimental_interactions['bait_ID'].astype(str)
-    bait_ref_strings = experimental_interactions['bait_ID'].astype(str) + '_' + experimental_interactions['ref_ID'].astype(str)
-    interaction_set = set(ref_bait_strings).union(set(bait_ref_strings))
-    filtered_interactions = [interaction for interaction in unpruned_ppis if is_interaction_valid(interaction, gene_set, interaction_set)]
-    return filtered_interactions
+    ground_truth_gene_set = set(ground_truth_genes_df[column_name])
+    return [gene for gene in genes if gene not in ground_truth_gene_set]
 
 
-def parse_input_genes(infile) -> list:
-    """Parse the input file and return a list of official gene symbols."""
-    df = pd.read_csv(infile)
-    input_genes = df.iloc[:, 0].tolist()
-    return input_genes
+def write_ppi_file(ppi_list, outfile):
+    """Write the protein-protein interactions to a csv file with columns
+    gene_name_a, gene_name_b where a is the gene of interest (e.g., cancer
+    driver genes) and b is the interacting protein."""
+    logging.debug(f'Writing to directory {os.path.abspath(outfile)}...')
+    os.makedirs(os.path.abspath(os.path.join(os.path.dirname(outfile))), exist_ok=True)
+    ppi_list.sort()
+    rows = [pair.split('*') for pair in ppi_list]
+    with open(outfile, 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['gene_symbol_a', 'gene_symbol_b'])
+        writer.writerows(rows)
