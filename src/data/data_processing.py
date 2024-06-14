@@ -11,6 +11,10 @@ import os
 import pandas as pd
 
 
+class UndersamplingError(Exception):
+    """A class that represents an error in the undersampling process."""
+    pass
+
 def chunk_input_genes(input_genes: list, chunk_size: int = 20) -> list:
     """Chunk input genes since the Biogrid API is limited to returning
     10,000 interactions."""

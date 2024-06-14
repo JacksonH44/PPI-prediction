@@ -4,8 +4,46 @@ ncbi:
 biogrid:
   api_key: "" # Replace with your own API key
   base_url: "https://webservice.thebiogrid.org"
+  strict_evidence: [
+        "affinity capture-luminescence",
+        "affinity capture-ms",
+        "affinity capture-rna",
+        "affinity capture-western",
+        "two-hybrid"
+    ]
+  relaxed_evidence: [
+        "affinity capture-luminescence",
+        "affinity capture-ms",
+        "affinity capture-rna",
+        "affinity capture-western",
+        "biochemical activity",
+        "co-crystal structure",
+        "co-fractionation",
+        "co-localization",
+        "co-purification",
+        "dosage growth defect",
+        "dosage lethality",
+        "dosage rescue",
+        "far western",
+        "fret",
+        "negative genetic",
+        "pca",
+        "phenotypic enhancement",
+        "phenotypic suppression",
+        "positive genetic",
+        "protein-peptide",
+        "protein-rna",
+        "proximity label-ms",
+        "reconstituted complex",
+        "synthetic growth defect",
+        "synthetic haploinsufficiency",
+        "synthetic lethality",
+        "synthetic rescue",
+        "two-hybrid"
+    ]
 ground_truth:
   file_path: "data/raw/isoform_sequences.xlsx"
   sheet_name: "1A-Gene List"
   column: "Gene_Symbol"
-  triplet: "data/interim/triplets.csv"
+random:
+  seed: 108

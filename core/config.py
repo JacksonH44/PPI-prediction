@@ -28,4 +28,5 @@ BIOGRID_RELAXED_EVIDENCE = data["biogrid"]["relaxed_evidence"]
 GROUND_TRUTH_PATH = data["ground_truth"]["file_path"]
 GROUND_TRUTH_SHEET = data["ground_truth"]["sheet_name"]
 GROUND_TRUTH_COLUMN = data["ground_truth"]["column"]
-TRIPLET_FILE = data["ground_truth"]["triplet"]
+
+SEED = data["random"]["seed"]
