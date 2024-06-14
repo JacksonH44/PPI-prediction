@@ -23,7 +23,8 @@ from src.data.data_processing import (
     chunk_input_genes,
     parse_input_genes,
     remove_ground_truth_data,
-    UndersamplingError
+    UndersamplingError,
+    write_ppi_file
 )
 
 # Do random seeding
@@ -209,6 +210,9 @@ def parse_command_line(): # pragma: no cover
     parser.add_argument('-p', '--positive_dataset', type=str,
                         default='data/processed/positive_ppis.csv',
                         help='Path to CSV file fo positive PPI dataset')
+    parser.add_argument('-o', '--outfile', type=str,
+                        default='data/processed/negative_ppis.csv',
+                        help='Path to output file to store negative PPI datset')
     parser.add_argument('-v', '--verbose',
                         action='store_true',
                         help='Change logging level from default level to noisiest level')
@@ -265,6 +269,8 @@ async def main(): # pragma: no cover
     except UndersamplingError as e:
         logging.warning(e)
     logging.debug(f'Found {len(neg_ppis)} negative PPIs...')
+    logging.debug(f'Writing negative PPIs to {args.outfile}...')
+    write_ppi_file(neg_ppis, args.outfile)
 
 
 if __name__ == '__main__': # pragma: no cover

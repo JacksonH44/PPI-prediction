@@ -6,7 +6,13 @@ import pandas as pd
 
 from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
-from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
+from src.data.data_processing import (
+    chunk_input_genes,
+    parse_input_genes,
+    remove_ground_truth_data,
+    UndersamplingError,
+    write_ppi_file
+)
 from src.data.fasta_one_to_many import _create_files, process_file
 from src.data.generate_negative_dataset import (
     count_gene_symbols,
@@ -14,8 +20,7 @@ from src.data.generate_negative_dataset import (
     find_subcellular_proteins, 
     find_unsuitable_partners, 
     get_locations,
-    randomly_select_partners,
-    UndersamplingError
+    randomly_select_partners
 )
 from src.data.generate_positive_dataset import get_interactors
 
