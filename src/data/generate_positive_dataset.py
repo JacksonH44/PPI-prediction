@@ -54,8 +54,7 @@ async def main(): # pragma: no cover
         input_genes,
         cfg.GROUND_TRUTH_PATH,
         cfg.GROUND_TRUTH_SHEET,
-        cfg.GROUND_TRUTH_COLUMN,
-        cfg.TRIPLET_FILE
+        cfg.GROUND_TRUTH_COLUMN
     )
     logging.debug(f'Found {len(ground_truth_out_genes)} genes from {len(input_genes)} after removing ground truth genes...')
     chunked_genes = chunk_input_genes(ground_truth_out_genes)

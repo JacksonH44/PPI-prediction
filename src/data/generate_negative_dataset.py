@@ -9,6 +9,7 @@ from collections import defaultdict
 import csv
 import logging
 import os
+import random
 import sys
 import time
 
@@ -18,13 +19,30 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
-from src.data.data_processing import chunk_input_genes, parse_input_genes, remove_ground_truth_data
+from src.data.data_processing import (
+    chunk_input_genes,
+    parse_input_genes,
+    remove_ground_truth_data,
+    UndersamplingError
+)
+
+# Do random seeding
+random.seed(cfg.SEED)
+
+
+def randomly_select_partners(available_partners, num_samples):
+    """Randomly select num_samples partners from the available partners."""
+    if num_samples > len(available_partners):
+            raise UndersamplingError
+    partner_list = list(available_partners)
+    sample = random.sample(partner_list, num_samples)
+    return sample
 
 
 def count_gene_symbols(positive_ppis): 
     """Count the number of each gene symbol in the positve dataset."""
     gene_count = defaultdict(int)
-    # Error checking
+    # Checking the file exists
     if not os.path.isfile(positive_ppis):
         raise FileNotFoundError(f'''The file {positive_ppis} does not exist. 
                                 Have you created the positive dataset first 
@@ -40,7 +58,7 @@ def undersample_dataset(
         locations_df : pd.DataFrame, 
         positive_ppis : str,
         unsuitable_partners : dict
-):
+) -> list:
     """
     Create a list of negative PPIs where the number of PPIs for each 
     gene of interest is the same as in the positive dataset.
@@ -53,8 +71,29 @@ def undersample_dataset(
         Path to the file holding all positive PPIs
     unsuitable_partners : dict
         A map of gene : unsuitable_partner pairs
+
+    Returns
+    -------
+    neg_ppis : list
+        A list of negative PPIs that has the same number of PPIs for
+        each protein of interest as the positive set
     """
+    neg_ppis = []
     all_proteins = set(locations_df['Gene name'])
+    gene_count = count_gene_symbols(positive_ppis)
+    for gene, num_ppis in gene_count.items():
+        available_partners = all_proteins - unsuitable_partners[gene]
+        # Check that there are enough available partners
+        try:
+            partners = randomly_select_partners(available_partners, num_ppis)
+            ppis = [f'{gene}*{partner}' for partner in partners]
+            neg_ppis.extend(ppis)
+        except UndersamplingError:
+            msg = f'''gene {gene} is trying to undersample with {num_ppis} 
+            PPIS but only has {len(available_partners)}. {gene} is not 
+            included in the negative dataset.'''
+            logging.warning(msg)
+    return neg_ppis
 
 
 def find_subcellular_proteins(locations_df) -> defaultdict:
@@ -194,8 +233,7 @@ async def main(): # pragma: no cover
         input_genes,
         cfg.GROUND_TRUTH_PATH,
         cfg.GROUND_TRUTH_SHEET,
-        cfg.GROUND_TRUTH_COLUMN,
-        cfg.TRIPLET_FILE
+        cfg.GROUND_TRUTH_COLUMN
     )
     logging.debug(f'Found {len(ground_truth_out_genes)} genes from {len(input_genes)} after removing ground truth genes...')
     # Generate a list of all possible proteins a protein of interest could interact with
@@ -219,6 +257,14 @@ async def main(): # pragma: no cover
     logging.debug(f'''EXAMPLE: Unsuitable partners for HLF 
                   ({len(unsuitable_partners["HLF"])} total)''')
     logging.debug(f'Undersampling to create negative dataset...')
+    try:
+        neg_ppis = undersample_dataset(locations_df, args.positive_dataset, unsuitable_partners)
+    except FileNotFoundError:
+        msg = f'The file {args.positive_dataset} does not exist. The negative dataset was not processed.'
+        logging.warning(msg)
+    except UndersamplingError as e:
+        logging.warning(e)
+    logging.debug(f'Found {len(neg_ppis)} negative PPIs...')
 
 
 if __name__ == '__main__': # pragma: no cover

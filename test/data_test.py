@@ -13,9 +13,18 @@ from src.data.generate_negative_dataset import (
     find_interacting_proteins, 
     find_subcellular_proteins, 
     find_unsuitable_partners, 
-    get_locations
+    get_locations,
+    randomly_select_partners,
+    UndersamplingError
 )
 from src.data.generate_positive_dataset import get_interactors
+
+
+def test_randomly_select_partners_error():
+    """Test the handling of a set of available partners with a 
+    size less than the number of samples."""
+    with pytest.raises(UndersamplingError):
+        randomly_select_partners({'A', 'B', 'C'}, 4)
 
 
 def test_count_gene_symbols_error():
