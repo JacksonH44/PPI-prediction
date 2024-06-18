@@ -1,5 +1,5 @@
 """
-A collection of functions that call bio database APIs and 
+A collection of functions that call bio database APIs and
 process the resulting data.
 """
 
@@ -10,7 +10,7 @@ import sys
 
 import aiohttp
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
 
 

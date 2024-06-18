@@ -7,12 +7,10 @@ import argparse
 import asyncio
 import logging
 import os
-import sys
 import time
 
 import aiohttp
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import (
@@ -28,7 +26,8 @@ def parse_command_line(): # pragma: no cover
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('infile', type=str,
                         help='Path to Input CSV containing genes of interest')
-    parser.add_argument('outfile', type=str,
+    parser.add_argument('-o', '--outfile', type=str, 
+                        default='data/processed/positive_ppis.csv',
                         help='Output file path to write positive dataset to')
     parser.add_argument('-v', '--verbose',
                         action='store_true',
@@ -44,6 +43,7 @@ async def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/generate_positive_dataset.log")
+    os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
         with open(logfile, 'w') as file:
             file.write("") # Write an empty string to create the file

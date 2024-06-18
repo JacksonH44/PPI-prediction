@@ -16,7 +16,6 @@ import time
 import aiohttp
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import (
@@ -227,6 +226,7 @@ async def main(): # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = args.logfile if args.logfile is not None else os.path.join(os.getcwd(), "logs/generate_negative_dataset.log")
+    os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
         with open(logfile, 'w') as file:
             file.write("") # Write an empty string to create the file
@@ -263,14 +263,14 @@ async def main(): # pragma: no cover
     logging.debug(f'Undersampling to create negative dataset...')
     try:
         neg_ppis = undersample_dataset(locations_df, args.positive_dataset, unsuitable_partners)
+        logging.debug(f'Found {len(neg_ppis)} negative PPIs...')
+        logging.debug(f'Writing negative PPIs to {args.outfile}...')
+        write_ppi_file(neg_ppis, args.outfile)
     except FileNotFoundError:
         msg = f'The file {args.positive_dataset} does not exist. The negative dataset was not processed.'
         logging.warning(msg)
     except UndersamplingError as e:
         logging.warning(e)
-    logging.debug(f'Found {len(neg_ppis)} negative PPIs...')
-    logging.debug(f'Writing negative PPIs to {args.outfile}...')
-    write_ppi_file(neg_ppis, args.outfile)
 
 
 if __name__ == '__main__': # pragma: no cover
