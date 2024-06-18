@@ -65,16 +65,16 @@ async def get_interactors(
     resp = await session.request('GET', url=request_url, params=params)
     if resp.status != 200:
         logging.warning("Failed to get request for one of the genes in the gene list")
-        return
+        return []
     
     interactions = await resp.json()
     if len(interactions) == 0:
         logging.warning("Failed to retrieve any interaction experiments for the genes in the gene list")
-        return
+        return []
     
     # Create a hashmap of PPI pairs and the number of unique experiments. Unique experiments
     # are experiments that are from different studies (different Pubmed IDs).
-    ppis = {}
+    ppis: dict[str, set[str]] = {}
     for interaction in interactions.values():
         sym_a = interaction['OFFICIAL_SYMBOL_A']
         sym_b = interaction['OFFICIAL_SYMBOL_B']
@@ -93,6 +93,6 @@ async def get_interactors(
     if not relax_evidence:
         output_ppis = [ppi for ppi, e_id in ppis.items() if len(e_id) >= cross_study_level]
     else:
-        output_ppis = ppis.keys()
+        output_ppis = list(ppis.keys())
     logging.debug(f'Found a total of {len(interactions)} interactions and generated {len(output_ppis)} PPIs for:\n{gene_list}')
     return output_ppis

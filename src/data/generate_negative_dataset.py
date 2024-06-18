@@ -97,7 +97,7 @@ def undersample_dataset(
     return neg_ppis
 
 
-def find_subcellular_proteins(locations_df) -> defaultdict:
+def find_subcellular_proteins(locations_df) -> defaultdict[str, set[str]]:
     """Find all potential proteins that are in the same
     subcellular location as a gene."""
     locations_to_genes = defaultdict(set)
@@ -107,7 +107,7 @@ def find_subcellular_proteins(locations_df) -> defaultdict:
         for location in locations.split(';'):
             locations_to_genes[location].add(gene)
     
-    genes_sharing_locations = defaultdict(set)
+    genes_sharing_locations: defaultdict[str, set[str]] = defaultdict(set)
     for genes in locations_to_genes.values():
         for gene in genes:
             # Add the gene itself to the off limits proteins to not allow for self-interactions
@@ -174,7 +174,7 @@ def get_locations(gene_file : str, location_file : str) -> pd.DataFrame:
         gene_file,
         usecols=['gene']
     )
-    gene_df.columns = ['Gene name']
+    gene_df = gene_df.rename(columns={'gene': 'Gene name'})
     # Rename column to be able to merge dataframes
     logging.debug(f'Number of genes initially: {gene_df.shape[0]}')
     location_df = pd.read_csv(
