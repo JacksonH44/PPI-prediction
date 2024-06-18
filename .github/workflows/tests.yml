@@ -4,6 +4,10 @@ on:
     - push
     - pull_request
 
+env:
+    NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+    BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
+
 jobs:
     test:
         runs-on: ${{ matrix.os }}

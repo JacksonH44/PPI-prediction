@@ -10,17 +10,28 @@ import yaml
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 
+# Check if config file exists
+if os.path.exists('config/config.yml'):
+    with open(BASE_DIR + "/config/config.yml", "r") as configFile:
+        data = configFile.read()
 
-with open(BASE_DIR + "/config/config.yml", "r") as configFile:
-    data = configFile.read()
+    data = yaml.load(data, Loader=yaml.FullLoader)
 
-data = yaml.load(data, Loader=yaml.FullLoader)
+    # Specify all sensitive data from the config file
+    NCBI_API_KEY = data["ncbi"]["api_key"]
+    BIOGRID_API_KEY = data["biogrid"]["api_key"]
+else:
+    with open(BASE_DIR + "/config/config.template.yml", "r") as configFile:
+        data = configFile.read()
 
-# Custom variables
-NCBI_API_KEY = data["ncbi"]["api_key"]
+    data = yaml.load(data, Loader=yaml.FullLoader)
+
+    # Specify all sensitive data from the environment variables (e.g., GitHub Actions Secrets)
+    NCBI_API_KEY = os.environ["NCBI_API_KEY"]
+    BIOGRID_API_KEY = os.environ["BIOGRID_API_KEY"]
+
 NCBI_BASE_URL = data["ncbi"]["base_url"]
 
-BIOGRID_API_KEY = data["biogrid"]["api_key"]
 BIOGRID_BASE_URL = data["biogrid"]["base_url"]
 BIOGRID_STRICT_EVIDENCE = data["biogrid"]["strict_evidence"]
 BIOGRID_RELAXED_EVIDENCE = data["biogrid"]["relaxed_evidence"]
