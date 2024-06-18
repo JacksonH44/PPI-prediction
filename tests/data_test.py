@@ -43,7 +43,7 @@ def test_count_gene_symbols_error():
 @pytest.mark.parametrize("positive_ppis, expected_result",
     [
         (
-            "test/test_data/positive_ppis_test.csv",
+            "tests/test_data/positive_ppis_test.csv",
             {
                 "ABI1": 4,
                 "ABL1": 2,
@@ -162,8 +162,8 @@ def test_get_locations_success():
     }
     expected_result = pd.DataFrame(data=expected_data)
     actual_result = get_locations(
-        'test/test_data/MANE_GencodeID_test.csv',
-        'test/test_data/subcellular_location_test.csv'
+        'tests/test_data/MANE_GencodeID_test.csv',
+        'tests/test_data/subcellular_location_test.csv'
     )
     assert expected_result.equals(actual_result)
 
@@ -175,7 +175,7 @@ def test_remove_ground_truth_data_success():
     expected_output = ["FANCE", "BRCA1"]
     actual_output = remove_ground_truth_data(
         unpruned_genes, 
-        'test/test_data/isoform_sequences_test.xlsx',
+        'tests/test_data/isoform_sequences_test.xlsx',
         '1A-Gene List',
         'Gene_Symbol'
     )
@@ -195,7 +195,7 @@ def test_chunk_input_genes_success():
     assert actual_chunked_genes == expected_chunked_genes
 
 
-@pytest.mark.parametrize("infile", [('test/test_data/cancer_driver_gene_list_test.csv')])
+@pytest.mark.parametrize("infile", [('tests/test_data/cancer_driver_gene_list_test.csv')])
 def test_parse_input_genes_success(infile):
     """Test the generation of reference gene list for PPI pairs."""
     expected_output = ["CHD4", "CHEK2", "CIC", "CIITA", "CLIP1", "CLTC", 
@@ -256,7 +256,7 @@ async def test_get_interactors_success(
 @pytest.mark.parametrize("test_file_path, expected_data, positive",
     [
         (
-            'test/test_data/ppis_test1.xlsx', 
+            'tests/test_data/ppis_test1.xlsx', 
             {
                 'ref_ID': ['ACTN4_1', 'ACTN4_1', 'AKT1_1', 'AKT1_1', 'AKT1_1', 'BAG1_1'],
                 'alt_ID': ['ACTN4_4', 'ACTN4_4', 'AKT1_2', 'AKT1_2', 'AKT1_2', 'BAG1_2'],
@@ -266,7 +266,7 @@ async def test_get_interactors_success(
             False
         ),
         (
-            'test/test_data/ppis_test2.xlsx', 
+            'tests/test_data/ppis_test2.xlsx', 
             {
                 'ref_ID': ['BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1', 'BCL2L1_1',
                      'BCL2L1_1', 'BTC_1'],
@@ -278,7 +278,7 @@ async def test_get_interactors_success(
             True
         ),
         (
-            'test/test_data/ppis_test3.xlsx',
+            'tests/test_data/ppis_test3.xlsx',
             {
                 'ref_ID': ['CLCN2_1', 'CLCN2_1', 'CLCN2_1', 'CLCN2_1', 'CLCN2_1'],
                 'alt_ID': ['CLCN2_2', 'CLCN2_3', 'CLCN2_4', 'CLCN2_4', 'CLCN2_5'],
@@ -311,7 +311,7 @@ def test_process_file_success():
 TRIRQLQEREAGAEEKMQEQLERNRQCQQNLDAASKRLREKEDSLAQAGETINALKGRIS
 ELQWSVMDQEMRVKRLESEKQELQ'''
     actual_headers, actual_sequences = process_file(
-        'test/test_data/test_gene1.txt')
+        'tests/test_data/test_gene1.txt')
     assert (actual_headers[1] == expected_header and
             actual_sequences[1] == expected_sequence)
     
@@ -319,7 +319,7 @@ ELQWSVMDQEMRVKRLESEKQELQ'''
 def test__create_files_success():
     """Test the creation of individual FASTA files 
     from header sequence lists."""
-    outfolder_name = os.path.join(os.getcwd(), 'test', 'test_data', 
+    outfolder_name = os.path.join(os.getcwd(), 'tests', 'test_data', 
                                   'test_gene1')
     fname = os.path.join(outfolder_name, 'ENSG00000002822_ENST00000421113.fasta')
     expected_content = '''>ENSG00000002822|ENST00000421113
