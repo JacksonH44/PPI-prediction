@@ -8,6 +8,7 @@ from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
     chunk_input_genes,
+    find_unique_genes,
     parse_input_genes,
     remove_ground_truth_data,
     UndersamplingError,
@@ -21,6 +22,20 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+def test_find_unique_genes_success():
+    """Test the finding of unique genes from a dataset."""
+    # NOTE: We are testing with two of the same file,
+    # because that is sufficient for our testing purposes
+    actual_result = find_unique_genes(
+        'tests/test_data/positive_ppis_test.csv',
+        'tests/test_data/positive_ppis_test.csv'
+    )
+    expected_result = {"ABI1", "ABL1", "AR", "CACNA1A",
+                       "ENAH", "EPS8", "NCKAP1", "ABI2",
+                       "COPS2", "CREBBP", "CTNNB1"}
+    assert expected_result == actual_result
 
 
 def test_randomly_select_partners_error():
