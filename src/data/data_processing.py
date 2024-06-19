@@ -16,6 +16,21 @@ class UndersamplingError(Exception):
     pass
 
 
+def find_unique_genes(dataset_files) -> set[str]:
+    """Find all unique genes in both the positive and negative datasets."""
+    unique_genes: set[str] = set()
+    for file_path in dataset_files:
+        logging.debug(f'Processing file: {file_path}')
+        with open(file_path, "r") as pos:
+            pos_file = csv.reader(pos)
+            next(pos_file)  # Skip header
+            for row in pos_file:
+                protein_a, protein_b = row[0], row[1]
+                unique_genes.add(protein_a)
+                unique_genes.add(protein_b)
+    return unique_genes
+
+
 def chunk_input_genes(input_genes: list, chunk_size: int = 20) -> list:
     """Chunk input genes since the Biogrid API is limited to returning
     10,000 interactions."""

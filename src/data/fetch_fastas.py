@@ -7,9 +7,11 @@ import argparse
 import logging
 import os
 import requests
+import sys
 
 import pandas as pd
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from core import config as cfg
 
 API_KEY = cfg.NCBI_API_KEY

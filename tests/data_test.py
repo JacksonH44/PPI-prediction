@@ -8,11 +8,13 @@ from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
     chunk_input_genes,
+    find_unique_genes,
     parse_input_genes,
     remove_ground_truth_data,
     UndersamplingError,
 )
 from src.data.fasta_one_to_many import _create_files, process_file
+from src.data.find_gencode_ids import find_mane_transcripts
 from src.data.generate_negative_dataset import (
     count_gene_symbols,
     find_interacting_proteins,
@@ -21,6 +23,64 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+def test_find_mane_transcripts_success():
+    """Test that the finding of MANE transcripts is correct."""
+    expected_transcript_output = [
+        "ENST00000374690",
+        "ENST00000281172",
+        "ENST00000349496",
+        "ENST00000366843",
+        "ENST00000261018",
+        "ENST00000376140",
+        "ENST00000388901",
+    ]
+    expected_no_transcript_output = {"CACNA1A", "CREBBP", "NCKAP1", "ABL1"}
+    transcripts, no_transcripts = find_mane_transcripts(
+        {
+            "ABI1",
+            "AR",
+            "ENAH",
+            "EPS8",
+            "ABI2",
+            "COPS2",
+            "CTNNB1",
+            "CACNA1A",
+            "CREBBP",
+            "NCKAP1",
+            "ABL1",
+        }
+    )
+    assert (
+        expected_transcript_output == transcripts["gencodeID_transcript_MANE"].to_list()
+    ) & (expected_no_transcript_output == no_transcripts)
+
+
+def test_find_unique_genes_success():
+    """Test the finding of unique genes from a dataset."""
+    # NOTE: We are testing with two of the same file,
+    # because that is sufficient for our testing purposes
+    actual_result = find_unique_genes(
+        [
+            "tests/test_data/positive_ppis_test.csv",
+            "tests/test_data/positive_ppis_test.csv",
+        ]
+    )
+    expected_result = {
+        "ABI1",
+        "ABL1",
+        "AR",
+        "CACNA1A",
+        "ENAH",
+        "EPS8",
+        "NCKAP1",
+        "ABI2",
+        "COPS2",
+        "CREBBP",
+        "CTNNB1",
+    }
+    assert expected_result == actual_result
 
 
 def test_randomly_select_partners_error():
