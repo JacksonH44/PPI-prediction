@@ -41,3 +41,5 @@ GROUND_TRUTH_SHEET = data["ground_truth"]["sheet_name"]
 GROUND_TRUTH_COLUMN = data["ground_truth"]["column"]
 
 SEED = data["random"]["seed"]
+
+MANE_FILE = data["reference_files"]["mane"]

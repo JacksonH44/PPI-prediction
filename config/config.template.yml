@@ -47,3 +47,5 @@ ground_truth:
   column: "Gene_Symbol"
 random:
   seed: 108
+reference_files:
+  mane: "data/raw/MANE_GencodeID.csv"

@@ -9,11 +9,13 @@ import csv
 import logging
 import os
 import random
+import sys
 import time
 
 import aiohttp
 import pandas as pd
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import (
