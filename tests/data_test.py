@@ -15,6 +15,7 @@ from src.data.data_processing import (
     UndersamplingError,
 )
 from src.data.fasta_one_to_many import _create_files, process_file
+from src.data.fetch_msas import find_canonical_transcript
 from src.data.generate_positive_dataset import ppi_in_MANE
 from src.data.generate_negative_dataset import (
     count_gene_symbols,
@@ -24,6 +25,19 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+def test_find_canonical_transcripts_success():
+    """Test the ability to find canonical transcripts from a set of genes."""
+    expected_result = {
+        'A1BG': 'ENST00000263100.8',
+        'NAT1': 'ENST00000307719.9',
+        'CSTF3': 'ENST00000323959.9'
+    }
+    actual_result = find_canonical_transcript(
+        ['A1BG', 'NAT1', 'CSTF3']
+    )
+    assert actual_result == expected_result
 
 
 @pytest.mark.parametrize(
