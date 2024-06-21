@@ -10,8 +10,9 @@ import sys
 import time
 
 import aiohttp
+import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_processing import (
@@ -20,6 +21,15 @@ from src.data.data_processing import (
     remove_ground_truth_data,
     write_ppi_file,
 )
+
+
+def ppi_in_MANE(ppi, mane_df) -> bool:
+    """Check if both of the proteins in a ppi are in the MANE summary."""
+    protein_a, protein_b = ppi.split("*")
+    return (
+        mane_df.map(lambda x: x == protein_a).any().any()
+        and mane_df.map(lambda x: x == protein_b).any().any()
+    )
 
 
 def parse_command_line():  # pragma: no cover
@@ -86,8 +96,8 @@ async def main():  # pragma: no cover
     logging.info(f"Finished curation in {round(finish - start, 2)} second(s)")
     ppis = [ppi for sublist in ppi_lists for ppi in sublist]
     logging.info(f"Curated a total of {len(ppis)} high confidence PPIs...")
-    logging.debug("Removing ground truth PPIs...")
-    # Remove PPIs that include a protein from the ground truth data
+    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
+    ppis = [ppi for ppi in ppis if ppi_in_MANE(ppi, mane_df)]
     logging.info(f"Curated a total of {len(ppis)} unbiased PPIs...")
     write_ppi_file(ppis, args.outfile)
 

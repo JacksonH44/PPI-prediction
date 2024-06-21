@@ -4,6 +4,7 @@ import os
 import aiohttp
 import pandas as pd
 
+from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
@@ -14,7 +15,7 @@ from src.data.data_processing import (
     UndersamplingError,
 )
 from src.data.fasta_one_to_many import _create_files, process_file
-from src.data.find_gencode_ids import find_mane_transcripts
+from src.data.generate_positive_dataset import ppi_in_MANE
 from src.data.generate_negative_dataset import (
     count_gene_symbols,
     find_interacting_proteins,
@@ -25,36 +26,15 @@ from src.data.generate_negative_dataset import (
 )
 
 
-def test_find_mane_transcripts_success():
-    """Test that the finding of MANE transcripts is correct."""
-    expected_transcript_output = [
-        "ENST00000374690",
-        "ENST00000281172",
-        "ENST00000349496",
-        "ENST00000366843",
-        "ENST00000261018",
-        "ENST00000376140",
-        "ENST00000388901",
-    ]
-    expected_no_transcript_output = {"CACNA1A", "CREBBP", "NCKAP1", "ABL1"}
-    transcripts, no_transcripts = find_mane_transcripts(
-        {
-            "ABI1",
-            "AR",
-            "ENAH",
-            "EPS8",
-            "ABI2",
-            "COPS2",
-            "CTNNB1",
-            "CACNA1A",
-            "CREBBP",
-            "NCKAP1",
-            "ABL1",
-        }
-    )
-    assert (
-        expected_transcript_output == transcripts["gencodeID_transcript_MANE"].to_list()
-    ) & (expected_no_transcript_output == no_transcripts)
+@pytest.mark.parametrize(
+    "ppi, expected_result", [("MARCH7*BRCA1", False), ("FANCE*BRCA1", True)]
+)
+def test_ppi_in_MANE_success(ppi, expected_result):
+    """Test the ppi filtering function for proteins that are found
+    in the MANE summary."""
+    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
+    actual_result = ppi_in_MANE(ppi, mane_df)
+    assert actual_result == expected_result
 
 
 def test_find_unique_genes_success():
