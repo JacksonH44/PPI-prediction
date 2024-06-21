@@ -20,7 +20,7 @@ def find_unique_genes(dataset_files) -> set[str]:
     """Find all unique genes in both the positive and negative datasets."""
     unique_genes: set[str] = set()
     for file_path in dataset_files:
-        logging.debug(f'Processing file: {file_path}')
+        logging.debug(f"Processing file: {file_path}")
         with open(file_path, "r") as pos:
             pos_file = csv.reader(pos)
             next(pos_file)  # Skip header
