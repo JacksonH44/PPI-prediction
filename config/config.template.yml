@@ -48,4 +48,4 @@ ground_truth:
 random:
   seed: 108
 reference_files:
-  mane: "data/raw/MANE_GencodeID.csv"
+  mane: "data/raw/MANE_summary_v3.csv"

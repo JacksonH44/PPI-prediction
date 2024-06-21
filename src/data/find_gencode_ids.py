@@ -16,9 +16,13 @@ from src.data.data_processing import find_unique_genes
 
 def find_mane_transcripts(unique_genes) -> tuple[pd.DataFrame, set[str]]:
     """Create a dataframe of gene names and Gencode transcript IDs"""
-    mane_df = pd.read_csv(cfg.MANE_FILE)
-    unique_genes_df = mane_df[mane_df['gene'].isin(unique_genes)]
-    non_transcript_genes = unique_genes - set(unique_genes_df['gene'].to_list())
+    mane_df = pd.read_csv(
+        cfg.MANE_FILE,
+        sep='\t',
+        usecols=['symbol', 'Ensembl_nuc']
+    )
+    unique_genes_df = mane_df[mane_df['symbol'].isin(unique_genes)]
+    non_transcript_genes = unique_genes - set(unique_genes_df['symbol'].to_list())
     return (unique_genes_df, non_transcript_genes)
 
 
@@ -78,7 +82,7 @@ def main():  # pragma: no cover
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
     unique_genes = find_unique_genes(args.files)
     transcripts_df, no_transcripts = find_mane_transcripts(unique_genes)
-    logging.debug(f'Found {len(transcripts_df["gene"].to_list())} genes with a MANE transcript...')
+    logging.debug(f'Found {len(transcripts_df["symbol"].to_list())} genes with a MANE transcript...')
     logging.debug(f'Found {len(no_transcripts)} genes without a MANE transcript...')
     logging.debug(f'Writing genes with a transcript to {args.transcript_file}...')
     transcripts_df.to_csv(args.transcript_file, header=True, index=False)
