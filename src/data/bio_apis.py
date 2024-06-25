@@ -5,12 +5,123 @@ process the resulting data.
 
 import logging
 import os
+import requests
 import sys
 
 import aiohttp
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
+
+
+def find_uniprot_ids(transcripts: list[str]) -> dict[str, str]:
+    """Query the Biomart API to map canonical Ensembl transcripts to
+    UniProt IDs."""
+    transcripts = [transcript.split(".")[0] for transcript in transcripts]
+    transcript_ids_str = ",".join(transcripts)
+
+    # The BioMart API requires a query in XML format
+    # For parameter list go to:
+    # https://www.ensembl.org/biomart/martservice?type=attributes&dataset=hsapiens_gene_ensembl
+    query_xml = f"""
+    <Query virtualSchemaName="default" formatter="TSV" header="1" uniqueRows="1" count="">
+        <Dataset name="hsapiens_gene_ensembl" interface="default">
+            <Filter name="ensembl_transcript_id" value="{transcript_ids_str}"/>
+            <Attribute name="ensembl_transcript_id"/>
+            <Attribute name="uniprotswissprot"/>
+        </Dataset>
+    </Query>
+    """
+
+    response = requests.post(
+        "http://www.ensembl.org/biomart/martservice", data={"query": query_xml}
+    )
+    transcript_to_uniprot = {}
+    if response.status_code == 200:
+        lines = response.text.strip().split("\n")
+
+        for line in lines[1:]:
+            # Split TSV response and extract transcript ID
+            # and UniProt SwissProt ID
+            values = line.split("\t")
+            transcript_id = values[0]
+            try:
+                uniprotswissprot_id = values[1]
+                if uniprotswissprot_id == "":
+                    logging.warning(
+                        f"Was not able to find UniProt ID for protein with transcript ID {transcript_id}"
+                    )
+                else:
+                    transcript_to_uniprot[transcript_id] = uniprotswissprot_id
+            except IndexError:
+                logging.warning(
+                    f"Was not able to find UniProt ID for protein with transcript ID {transcript_id}"
+                )
+    else:
+        logging.warning(
+            f"Error: {response.status_code} for one of the transcripts in list:\n{transcripts}"
+        )
+    return transcript_to_uniprot
+
+
+def filter_for_uniref30(proteins: list[str]) -> list[str]:
+    """Filter out genes that don't appear in the Uniref30 DB from a list of PPIs or genes."""
+    treat_as_ppis = False
+    if "*" in proteins[0]:
+        treat_as_ppis = True
+        logging.debug("Uniref30 filter treating input as PPIs...")
+        gene_set = set()
+        for ppi in proteins:
+            protein_a, protein_b = ppi.split("*")
+            gene_set.add(protein_a)
+            gene_set.add(protein_b)
+            genes = list(gene_set)
+    else:
+        logging.debug("UniRef30 filter treating input as gene list...")
+        genes = proteins
+    gene_ids_str = ",".join(genes)
+
+    # The BioMart API requires a query in XML format
+    # For parameter list go to:
+    # https://www.ensembl.org/biomart/martservice?type=attributes&dataset=hsapiens_gene_ensembl
+    query_xml = f"""
+    <Query virtualSchemaName="default" formatter="TSV" header="1" uniqueRows="1" count="">
+        <Dataset name="hsapiens_gene_ensembl" interface="default">
+            <Filter name="uniprot_gn_symbol" value="{gene_ids_str}"/>
+            <Attribute name="uniprot_gn_symbol"/>
+            <Attribute name="uniprotswissprot"/>
+        </Dataset>
+    </Query>
+    """
+
+    filtered_gene_set = set()
+    response = requests.post(cfg.BIOMART_BASE_URL, data={"query": query_xml})
+    if response.status_code == 200:
+        lines = response.text.strip().split("\n")
+
+        for line in lines[1:]:
+            # Split TSV response and extract gene symbol ID
+            # and UniProt SwissProt ID
+            values = line.split("\t")
+            gene_id = values[0]
+            try:
+                uniprotswissprot_id = values[1]
+                if uniprotswissprot_id != "":
+                    filtered_gene_set.add(gene_id)
+            except IndexError:
+                logging.warning(
+                    f"""No SwissProt value for gene {gene_id}.
+                    This could be an error in the API call, but ensure a SwissProt ID exists for this gene."""
+                )
+    filtered_genes = []
+    if treat_as_ppis:
+        for ppi in proteins:
+            protein_a, protein_b = ppi.split("*")
+            if protein_a in filtered_gene_set and protein_b in filtered_gene_set:
+                filtered_genes.append(ppi)
+    else:
+        filtered_genes = list(filtered_gene_set)
+    return filtered_genes
 
 
 async def get_interactors(

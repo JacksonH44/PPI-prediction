@@ -43,3 +43,5 @@ GROUND_TRUTH_COLUMN = data["ground_truth"]["column"]
 SEED = data["random"]["seed"]
 
 MANE_FILE = data["reference_files"]["mane"]
+
+BIOMART_BASE_URL = data["biomart"]["base_url"]
