@@ -49,3 +49,5 @@ random:
   seed: 108
 reference_files:
   mane: "data/raw/MANE_summary_v3.csv"
+biomart:
+  base_url: "http://www.ensembl.org/biomart/martservice"
