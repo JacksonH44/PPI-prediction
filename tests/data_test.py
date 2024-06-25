@@ -5,7 +5,7 @@ import aiohttp
 import pandas as pd
 
 from core import config as cfg
-from src.data.bio_apis import get_interactors
+from src.data.bio_apis import filter_for_uniref30, find_uniprot_ids, get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
     chunk_input_genes,
@@ -27,16 +27,48 @@ from src.data.generate_negative_dataset import (
 )
 
 
+@pytest.mark.parametrize(
+    "input, expected_result",
+    [
+        (
+            ["A1BG", "NAT1", "CSTF3", "ITIH5", "SLC9A7", "POLR2A"],
+            ["A1BG", "NAT1", "CSTF3", "SLC9A7"],
+        ),
+        (["A1BG*BRCA1", "ITIH5*BRCA1", "BRCA1*ITIH5"], ["A1BG*BRCA1"]),
+    ],
+)
+def test_filter_for_uniref30(input, expected_result):
+    """Filter a list of gene names or PPIs for only those
+    that have proteins that are in the UniRef30 DB."""
+    actual_result = filter_for_uniref30(input)
+    assert set(actual_result) == set(expected_result)
+
+
+@pytest.mark.parametrize(
+    "input, expected_result",
+    [
+        (
+            ["ENST00000263100", "ENST00000307719", "ENST00000323959"],
+            {
+                "ENST00000263100": "P04217",
+                "ENST00000307719": "P18440",
+                "ENST00000323959": "Q12996",
+            },
+        ),
+        (["ENST00000643490", "ENST00000397146", "ENST00000616978"], {}),
+    ],
+)
+def test_find_uniprot_ids_success(input, expected_result):
+    """Find UniProt SwissProt IDs from the Ensembl transcript
+    version."""
+    actual_result = find_uniprot_ids(input)
+    assert expected_result == actual_result
+
+
 def test_find_canonical_transcripts_success():
     """Test the ability to find canonical transcripts from a set of genes."""
-    expected_result = {
-        'A1BG': 'ENST00000263100.8',
-        'NAT1': 'ENST00000307719.9',
-        'CSTF3': 'ENST00000323959.9'
-    }
-    actual_result = find_canonical_transcript(
-        ['A1BG', 'NAT1', 'CSTF3']
-    )
+    expected_result = ["ENST00000263100.8", "ENST00000307719.9", "ENST00000323959.9"]
+    actual_result = find_canonical_transcript(["A1BG", "NAT1", "CSTF3"])
     assert actual_result == expected_result
 
 
@@ -212,10 +244,9 @@ def test_find_interacting_proteins_success(ppis):
 def test_get_locations_success():
     """Test the function that gets subcellular locations for all genes."""
     expected_data = {
-        "Gene name": ["CHD4", "CHEK2", "CIC", "CRLF2"],
-        "Reliability": ["Enhanced", "Supported", "Supported", "Approved"],
+        "Gene name": ["CHEK2", "CIC", "CRLF2"],
+        "Reliability": ["Supported", "Supported", "Approved"],
         "Main location": [
-            "Nucleoplasm",
             "Nucleoplasm",
             "Nucleoplasm",
             "Plasma membrane",
@@ -223,7 +254,7 @@ def test_get_locations_success():
     }
     expected_result = pd.DataFrame(data=expected_data)
     actual_result = get_locations(
-        "tests/test_data/MANE_GencodeID_test.csv",
+        "tests/test_data/MANE_summary_v3_test.csv",
         "tests/test_data/subcellular_location_test.csv",
     )
     assert expected_result.equals(actual_result)
