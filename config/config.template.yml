@@ -51,3 +51,7 @@ reference_files:
   mane: "data/raw/MANE_summary_v3.csv"
 biomart:
   base_url: "http://www.ensembl.org/biomart/martservice"
+aws:
+  access_key_id: ""
+  secret_access_key: ""
+  region: "us-east-1"
