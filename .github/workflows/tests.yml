@@ -8,6 +8,8 @@ on:
 env:
     NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
     BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
+    AWS_ID: ${{ secrets.AWS_ID }}
+    AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
 jobs:
     test:
