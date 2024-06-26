@@ -5,6 +5,7 @@ import aiohttp
 import pandas as pd
 
 from core import config as cfg
+from src.data.aws_utils import download_msa_from_openfold
 from src.data.bio_apis import filter_for_uniref30, find_uniprot_ids, get_interactors
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
@@ -25,6 +26,18 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+@pytest.mark.parametrize('uniprot_id, expected_result', [
+    ('A0A067CGT3', True),
+    ('Q9HB96', False)
+])
+def test_download_msa_from_openfold(uniprot_id, expected_result):
+    """A test for proper recognition of download files
+    (sets the download flag to false)."""
+    actual_result = download_msa_from_openfold(uniprot_id, 'dummy/', download=False)
+    assert actual_result == expected_result
+
 
 
 @pytest.mark.parametrize(
