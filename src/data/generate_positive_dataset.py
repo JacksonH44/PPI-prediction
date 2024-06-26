@@ -14,10 +14,7 @@ import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
-from src.data.bio_apis import (
-    filter_for_uniref30,
-    get_interactors
-)
+from src.data.bio_apis import filter_for_uniref30, get_interactors
 from src.data.data_processing import (
     chunk_input_genes,
     parse_input_genes,
@@ -102,10 +99,12 @@ async def main():  # pragma: no cover
     logging.debug("Filtering out genes that don't have a canonical MANE transcript...")
     mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
     mane_ppis = [ppi for ppi in ppis if ppi_in_MANE(ppi, mane_df)]
-    logging.debug(f'Found a total of {len(ppis)} genes after filtering for MANE transcripts...')
-    logging.debug('Filtering out PPIs with genes not in UniProtSwissProt DB...')
+    logging.debug(
+        f"Found a total of {len(ppis)} genes after filtering for MANE transcripts..."
+    )
+    logging.debug("Filtering out PPIs with genes not in UniProtSwissProt DB...")
     ppis = filter_for_uniref30(mane_ppis)
-    logging.debug(f'Found a total of {len(ppis)} genes after filtering...')
+    logging.debug(f"Found a total of {len(ppis)} genes after filtering...")
     write_ppi_file(ppis, args.outfile)
 
 

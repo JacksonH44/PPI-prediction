@@ -28,16 +28,14 @@ from src.data.generate_negative_dataset import (
 )
 
 
-@pytest.mark.parametrize('uniprot_id, expected_result', [
-    ('A0A067CGT3', True),
-    ('Q9HB96', False)
-])
+@pytest.mark.parametrize(
+    "uniprot_id, expected_result", [("A0A067CGT3", True), ("Q9HB96", False)]
+)
 def test_download_msa_from_openfold(uniprot_id, expected_result):
     """A test for proper recognition of download files
     (sets the download flag to false)."""
-    actual_result = download_msa_from_openfold(uniprot_id, 'dummy/', download=False)
+    actual_result = download_msa_from_openfold(uniprot_id, "dummy/", download=False)
     assert actual_result == expected_result
-
 
 
 @pytest.mark.parametrize(

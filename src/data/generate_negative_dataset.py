@@ -17,10 +17,7 @@ import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
-from src.data.bio_apis import (
-    filter_for_uniref30,
-    get_interactors
-)
+from src.data.bio_apis import filter_for_uniref30, get_interactors
 from src.data.data_processing import (
     chunk_input_genes,
     parse_input_genes,
@@ -83,7 +80,7 @@ def undersample_dataset(
     """
     neg_ppis = []
     all_proteins = set(locations_df["Gene name"])
-    logging.debug('Filtering out proteins not in UniRef30...')
+    logging.debug("Filtering out proteins not in UniRef30...")
     all_filtered_proteins = set(filter_for_uniref30(list(all_proteins)))
     gene_count = count_gene_symbols(positive_ppis)
     for gene, num_ppis in gene_count.items():
@@ -178,7 +175,7 @@ def find_unsuitable_partners(
 
 def get_locations(gene_file: str, location_file: str) -> pd.DataFrame:
     """Get subcellular locations for all genes in the file."""
-    gene_df = pd.read_csv(gene_file, sep='\t', usecols=["symbol"])
+    gene_df = pd.read_csv(gene_file, sep="\t", usecols=["symbol"])
     gene_df = gene_df.rename(columns={"symbol": "Gene name"})
     # Rename column to be able to merge dataframes
     logging.debug(f"Number of genes initially: {gene_df.shape[0]}")
