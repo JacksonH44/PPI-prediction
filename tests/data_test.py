@@ -78,7 +78,11 @@ def test_find_uniprot_ids_success(input, expected_result):
 
 def test_find_canonical_transcripts_success():
     """Test the ability to find canonical transcripts from a set of genes."""
-    expected_result = ["ENST00000263100.8", "ENST00000307719.9", "ENST00000323959.9"]
+    expected_result = {
+        "A1BG": "ENST00000263100.8",
+        "NAT1": "ENST00000307719.9",
+        "CSTF3": "ENST00000323959.9"
+    }
     actual_result = find_canonical_transcript(["A1BG", "NAT1", "CSTF3"])
     assert actual_result == expected_result
 
