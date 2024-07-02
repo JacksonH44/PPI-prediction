@@ -41,5 +41,5 @@ jobs:
             run: poetry run mypy
           - name: Lint with flake8
             run: |
-                poetry run flake8 src/data
+                poetry run flake8 src/data/*
                 poetry run flake8 tests

@@ -4,29 +4,29 @@ in the dataset.
 """
 
 import argparse
+import csv
 import logging
 import os
 import sys
-import time
 
 import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
-from src.data.bio_apis import find_uniprot_ids
 from src.data.data_processing import find_unique_genes
 
 
-def find_canonical_transcript(genes) -> list[str]:
+def find_canonical_transcript(genes) -> dict[str, str]:
     """Find the canonical transcripts for the whole set of genes."""
-    transcripts = []
+    transcripts = {}
     mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol", "Ensembl_nuc"])
     for gene in genes:
-        transcript_result = mane_df[mane_df["symbol"] == gene]["Ensembl_nuc"].values[0]
+        mane_df['symbol'] = mane_df['symbol'].apply(lambda s: s.upper())
+        transcript_result = mane_df[mane_df["symbol"] == gene.upper()]["Ensembl_nuc"].values[0]
         if transcript_result == "":  # Symbol not in MANE summary file
             logging.warning(f"Did not find canonical transcript for {gene}")
         else:
-            transcripts.append(transcript_result)
+            transcripts[gene] = transcript_result
     return transcripts
 
 
@@ -80,12 +80,11 @@ def main():  # pragma: no cover
     all_genes = find_unique_genes(args.input_files)
     logging.debug(f"Found {len(all_genes)} unique genes...")
     transcripts = find_canonical_transcript(all_genes)
-    start = time.perf_counter()  # Time the function call for debugging
-    uniprot_ids = find_uniprot_ids(transcripts)
-    logging.debug(f"Found {len(uniprot_ids.values())} Uniprot IDs...")
-    finish = time.perf_counter()
-    logging.info(f"Finished curation in {round(finish - start, 2)} second(s)")
-    # Fetch MSAs and store them somewhere
+    # Write genes and transcripts to csv file
+    with open('data/interim/gene_transcripts.csv', 'w') as file:
+        writer = csv.writer(file)
+        for gene, transcript in transcripts.items():
+            writer.writerow([gene, transcript.split('.')[0]])
 
 
 if __name__ == "__main__":  # pragma: no cover
