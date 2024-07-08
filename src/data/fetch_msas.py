@@ -21,8 +21,10 @@ def find_canonical_transcript(genes) -> dict[str, str]:
     transcripts = {}
     mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol", "Ensembl_nuc"])
     for gene in genes:
-        mane_df['symbol'] = mane_df['symbol'].apply(lambda s: s.upper())
-        transcript_result = mane_df[mane_df["symbol"] == gene.upper()]["Ensembl_nuc"].values[0]
+        mane_df["symbol"] = mane_df["symbol"].apply(lambda s: s.upper())
+        transcript_result = mane_df[mane_df["symbol"] == gene.upper()][
+            "Ensembl_nuc"
+        ].values[0]
         if transcript_result == "":  # Symbol not in MANE summary file
             logging.warning(f"Did not find canonical transcript for {gene}")
         else:
@@ -81,10 +83,10 @@ def main():  # pragma: no cover
     logging.debug(f"Found {len(all_genes)} unique genes...")
     transcripts = find_canonical_transcript(all_genes)
     # Write genes and transcripts to csv file
-    with open('data/interim/gene_transcripts.csv', 'w') as file:
+    with open("data/interim/gene_transcripts.csv", "w") as file:
         writer = csv.writer(file)
         for gene, transcript in transcripts.items():
-            writer.writerow([gene, transcript.split('.')[0]])
+            writer.writerow([gene, transcript.split(".")[0]])
 
 
 if __name__ == "__main__":  # pragma: no cover

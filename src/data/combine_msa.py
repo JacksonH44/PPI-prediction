@@ -21,13 +21,19 @@ def write_combined_a3m(
     if os.path.isabs(output_msa):
         os.makedirs(os.path.dirname(output_msa), exist_ok=True)
     else:
-        os.makedirs(os.path.dirname(os.path.join(os.getcwd(), output_msa)), exist_ok=True)
+        os.makedirs(
+            os.path.dirname(os.path.join(os.getcwd(), output_msa)), exist_ok=True
+        )
     with open(output_msa, "w") as combined_msa:
         # Write MSA header
-        combined_msa.write(f'#{first_length},{second_length}\t1,1\n')
+        combined_msa.write(f"#{first_length},{second_length}\t1,1\n")
         # Write paired sequence portion of MSA
-        for (first_header, first_sequence), (second_header, second_sequence) in zip(first_msa_sequences.items(), second_msa_sequences.items()):
-            combined_msa.write(f'>{first_header}\t{second_header}\n{first_sequence}{second_sequence}\n')
+        for (first_header, first_sequence), (second_header, second_sequence) in zip(
+            first_msa_sequences.items(), second_msa_sequences.items()
+        ):
+            combined_msa.write(
+                f">{first_header}\t{second_header}\n{first_sequence}{second_sequence}\n"
+            )
         # Write unpaired portion for first MSA
         for header, sequence in first_msa_sequences.items():
             combined_msa.write(f'>{header}\n{sequence}{"-" * second_length}\n')
@@ -39,13 +45,13 @@ def write_combined_a3m(
 def extract_header_sequence_pairs(msa_file) -> dict[str, str]:
     """Return a hashmap of header-sequence pairs for an
     MSA file."""
-    with open(msa_file, 'r') as msa_file:
+    with open(msa_file, "r") as msa_file:
         lines = msa_file.readlines()
     sequences: dict[str, str] = {}
-    current_header = ''
+    current_header = ""
     for line in lines:
         if line.startswith(">"):  # header
-            current_header = line.lstrip(">").split(' ')[0].strip()
+            current_header = line.lstrip(">").split(" ")[0].strip()
         else:  # sequence
             sequences[current_header] = line.strip()
     return sequences
