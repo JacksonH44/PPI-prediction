@@ -7,6 +7,7 @@ import pandas as pd
 from core import config as cfg
 from src.data.aws_utils import download_msa_from_openfold
 from src.data.bio_apis import filter_for_uniref30, find_uniprot_ids, get_interactors
+from src.data.combine_msa import extract_header_sequence_pairs
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
     chunk_input_genes,
@@ -26,6 +27,17 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+def test_extract_header_sequence_pairs_success():
+    """Test for proper return of header sequence pairs
+    from an MSA file."""
+    expected_output = {
+        "ENST00000546591|RPL41": "MRAKWRKKRMRRLKRKRRKMRQRSK",
+        "UniRef100_C8Z6C0": "MRAKWRKKKTRRLKRKRRKVRARSK",
+    }
+    actual_output = extract_header_sequence_pairs("tests/test_data/test_msa.a3m")
+    assert actual_output == expected_output
 
 
 @pytest.mark.parametrize(
@@ -81,7 +93,7 @@ def test_find_canonical_transcripts_success():
     expected_result = {
         "A1BG": "ENST00000263100.8",
         "NAT1": "ENST00000307719.9",
-        "CSTF3": "ENST00000323959.9"
+        "CSTF3": "ENST00000323959.9",
     }
     actual_result = find_canonical_transcript(["A1BG", "NAT1", "CSTF3"])
     assert actual_result == expected_result
