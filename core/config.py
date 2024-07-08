@@ -42,6 +42,8 @@ BIOGRID_BASE_URL = data["biogrid"]["base_url"]
 BIOGRID_STRICT_EVIDENCE = data["biogrid"]["strict_evidence"]
 BIOGRID_RELAXED_EVIDENCE = data["biogrid"]["relaxed_evidence"]
 
+ENSEMBL_BASE_URL = data["ensembl"]["base_url"]
+
 GROUND_TRUTH_PATH = data["ground_truth"]["file_path"]
 GROUND_TRUTH_SHEET = data["ground_truth"]["sheet_name"]
 GROUND_TRUTH_COLUMN = data["ground_truth"]["column"]

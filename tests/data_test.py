@@ -6,7 +6,12 @@ import pandas as pd
 
 from core import config as cfg
 from src.data.aws_utils import download_msa_from_openfold
-from src.data.bio_apis import filter_for_uniref30, find_uniprot_ids, get_interactors
+from src.data.bio_apis import (
+    filter_for_uniref30,
+    find_uniprot_ids,
+    get_interactors,
+    get_sequence_length,
+)
 from src.data.combine_msa import extract_header_sequence_pairs
 from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
@@ -27,6 +32,14 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+def test_get_sequence_length_success():
+    """Test that querying the Ensembl API for transcript
+    sequence length is correct."""
+    expected_result = 315
+    actual_result = get_sequence_length("ENST00000534324")
+    assert expected_result == actual_result
 
 
 def test_extract_header_sequence_pairs_success():

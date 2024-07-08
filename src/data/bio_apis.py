@@ -14,6 +14,22 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
 
 
+def get_sequence_length(ensembl_transcript_id) -> int:
+    """Query the Ensembl API to get the number of amino acids in a sequence"""
+    lookup = f"/lookup/id/{ensembl_transcript_id}?expand=1"
+    headers = {"Content-Type": "application/json"}
+    response = requests.get(cfg.ENSEMBL_BASE_URL + lookup, headers=headers)
+
+    if not response.ok:
+        logging.warning(
+            f"Unable to retrieve amino acid sequence length for {ensembl_transcript_id}"
+        )
+        return -1
+
+    data = response.json()
+    return data["Translation"]["length"] if "Translation" in data else -1
+
+
 def find_uniprot_ids(transcripts: list[str]) -> dict[str, str]:
     """Query the Biomart API to map canonical Ensembl transcripts to
     UniProt IDs."""
