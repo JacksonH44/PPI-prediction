@@ -17,6 +17,7 @@ from src.data.create_protein_triplets import find_triplets
 from src.data.data_processing import (
     chunk_input_genes,
     find_unique_genes,
+    map_symbol_to_transcript,
     parse_input_genes,
     remove_ground_truth_data,
     UndersamplingError,
@@ -32,6 +33,14 @@ from src.data.generate_negative_dataset import (
     get_locations,
     randomly_select_partners,
 )
+
+
+def test_map_symbol_to_transcript_success():
+    """Test the functionality of mapping a symbol to its
+    canonical Ensembl transcript"""
+    expected_result = 'ENST00000534324'
+    actual_result = map_symbol_to_transcript('CYB5RL')
+    assert expected_result == actual_result
 
 
 def test_get_sequence_length_success():

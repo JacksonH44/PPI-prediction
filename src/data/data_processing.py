@@ -6,14 +6,24 @@ data observations from a dataset.
 import csv
 import logging
 import os
+import sys
 
 import pandas as pd
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+from core import config as cfg
 
 
 class UndersamplingError(Exception):
     """A class that represents an error in the undersampling process."""
 
     pass
+
+
+def map_symbol_to_transcript(symbol: str, reference_file: str = cfg.MANE_FILE):
+    """Map NCBI gene symbol to canonical """
+    transcript_df = pd.read_csv(reference_file, sep='\t', usecols=['symbol', 'Ensembl_nuc'])
+    return transcript_df[transcript_df['symbol'] == symbol]['Ensembl_nuc'].values[0].split('.')[0]
 
 
 def find_unique_genes(dataset_files) -> set[str]:
