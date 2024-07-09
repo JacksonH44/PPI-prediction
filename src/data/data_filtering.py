@@ -5,11 +5,15 @@ Filtering operations on datasets.
 import time
 import logging
 
+import aiohttp
+
 from src.data.bio_apis import get_sequence_lengths
 from src.data.data_processing import map_symbols_to_transcripts
 
 
-def filter_out_long_sequences(ppis: list[str]) -> list[str]:
+async def filter_out_long_sequences(
+    session: aiohttp.ClientSession, ppis: list[str]
+) -> list[str]:
     """Filter out sequences that make a protein
     pair greater than 2000 amino acids"""
     split_ppi_symbols = []
@@ -19,7 +23,7 @@ def filter_out_long_sequences(ppis: list[str]) -> list[str]:
         split_ppi_symbols.append(symbol_b)
     symbol_transcript_map = map_symbols_to_transcripts(split_ppi_symbols)
     start = time.perf_counter()
-    aa_count = get_sequence_lengths(list(symbol_transcript_map.values()))
+    aa_count = await get_sequence_lengths(session, list(symbol_transcript_map.values()))
     finish = time.perf_counter()
     logging.info(f"Made Ensembl API call in {round(finish - start, 2)} second(s)")
     filtered_ppis = []

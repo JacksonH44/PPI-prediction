@@ -14,22 +14,27 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
 
 
-def get_sequence_lengths(ensembl_transcript_ids: list[str]) -> dict[str, int]:
+async def get_sequence_lengths(
+    session: aiohttp.ClientSession, ensembl_transcript_ids: list[str]
+) -> dict[str, int]:
     """Query the Ensembl API to get the number of amino acids in a sequence"""
     lookup = "/lookup/id"
     headers = {"Content-Type": "application/json"}
     data = {"ids": ensembl_transcript_ids, "expand": 1}
     logging.debug(f"Calling Ensembl API with {len(ensembl_transcript_ids)} transcripts")
-    response = requests.post(cfg.ENSEMBL_BASE_URL + lookup, headers=headers, json=data)
+    # response = requests.post(cfg.ENSEMBL_BASE_URL + lookup, headers=headers, json=data)
+    request_url = cfg.ENSEMBL_BASE_URL + lookup
+    response = await session.request(
+        "POST", url=request_url, headers=headers, json=data
+    )
 
-    if response.status_code != 200:
+    if response.status != 200:
         logging.warning(
             f"Unable to retrieve sequence for one of the following:\n{ensembl_transcript_ids}"
         )
-        res = response.json()
         return {}
 
-    res = response.json()
+    res = await response.json()
     aa_counts = {}
     for transcript in ensembl_transcript_ids:
         if transcript in res and "Translation" in res[transcript]:

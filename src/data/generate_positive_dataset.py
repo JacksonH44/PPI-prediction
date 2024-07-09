@@ -104,11 +104,11 @@ async def main():  # pragma: no cover
         f"Found a total of {len(ppis)} genes after filtering for MANE transcripts..."
     )
     logging.debug("Filtering out PPIs with total complex length > 2,000...")
-    chunked_ppis = chunk_input_genes(mane_ppis, 1000)
-    ppis = []
-    for chunk in chunked_ppis:
-        filtered_chunk = filter_out_long_sequences(chunk)
-        ppis = ppis + filtered_chunk
+    chunked_ppis = chunk_input_genes(mane_ppis, 250)
+    async with aiohttp.ClientSession() as session:
+        tasks = [filter_out_long_sequences(session, chunk) for chunk in chunked_ppis]
+        filtered_lists = await asyncio.gather(*tasks, return_exceptions=True)
+    ppis = [ppi for sublist in filtered_lists for ppi in sublist]
     logging.debug(f"Found a total of {len(ppis)} genes after filtering...")
     write_ppi_file(ppis, args.outfile)
 

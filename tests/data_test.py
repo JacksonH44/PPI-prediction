@@ -36,12 +36,14 @@ from src.data.generate_negative_dataset import (
 )
 
 
-def test_filter_out_long_sequences_success():
+@pytest.mark.asyncio
+async def test_filter_out_long_sequences_success():
     """Test the ability to filter out PPIs that have
     total amino acid length > 2,000."""
     test_ppis = ["TP53*PTK2", "WAS*FNBP1", "BRCA1*RHEB"]
     expected_output = ["TP53*PTK2", "WAS*FNBP1"]
-    actual_output = filter_out_long_sequences(test_ppis)
+    async with aiohttp.ClientSession() as session:
+        actual_output = await filter_out_long_sequences(session, test_ppis)
     assert actual_output == expected_output
 
 
@@ -53,11 +55,13 @@ def test_map_symbol_to_transcript_success():
     assert expected_result == actual_result
 
 
-def test_get_sequence_length_success():
+@pytest.mark.asyncio
+async def test_get_sequence_length_success():
     """Test that querying the Ensembl API for transcript
     sequence length is correct."""
     expected_result = {"ENST00000534324": 315}
-    actual_result = get_sequence_lengths(["ENST00000534324"])
+    async with aiohttp.ClientSession() as session:
+        actual_result = await get_sequence_lengths(session, ["ENST00000534324"])
     assert expected_result == actual_result
 
 
