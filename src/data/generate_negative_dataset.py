@@ -17,9 +17,10 @@ import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
-from src.data.bio_apis import filter_for_uniref30, get_interactors
+from src.data.bio_apis import get_interactors, get_sequence_lengths
 from src.data.data_processing import (
     chunk_input_genes,
+    map_symbols_to_transcripts,
     parse_input_genes,
     remove_ground_truth_data,
     UndersamplingError,
@@ -80,11 +81,9 @@ def undersample_dataset(
     """
     neg_ppis = []
     all_proteins = set(locations_df["Gene name"])
-    logging.debug("Filtering out proteins not in UniRef30...")
-    all_filtered_proteins = set(filter_for_uniref30(list(all_proteins)))
     gene_count = count_gene_symbols(positive_ppis)
     for gene, num_ppis in gene_count.items():
-        available_partners = all_filtered_proteins - unsuitable_partners[gene]
+        available_partners = all_proteins - unsuitable_partners[gene]
         # Check that there are enough available partners
         try:
             partners = randomly_select_partners(available_partners, num_ppis)
@@ -96,6 +95,65 @@ def undersample_dataset(
             included in the negative dataset."""
             logging.warning(msg)
     return neg_ppis
+
+
+async def find_too_long_proteins(
+    genes: list[str], locations_df: pd.DataFrame
+) -> defaultdict[str, set[str]]:
+    """
+    Find proteins that are too long to make complexes with each gene
+
+    Parameters
+    ----------
+    genes : list[str]
+        A list of all genes of interest
+    locations_df : pd.DataFrame
+        A dataframe of all possible genes that can be interacted with
+
+    Returns
+    -------
+    length_map : defaultdict[str, set[str]]
+        A hashmap of (gene name, proteins with too long sequence) pairs
+    """
+    length_map: defaultdict[str, set[str]] = defaultdict(set)
+    all_genes = locations_df["Gene name"].to_list()
+    all_transcripts = map_symbols_to_transcripts(all_genes)
+    genes_of_interest_transcripts = map_symbols_to_transcripts(genes)
+    logging.debug(
+        f"Found {len(genes_of_interest_transcripts.keys())} mappings for genes of interest..."
+    )
+    all_transcripts = {**all_transcripts, **genes_of_interest_transcripts}
+    logging.debug(
+        f"Found {len(all_transcripts.keys())} genes to find lengths for\nHead:\n{list(all_transcripts.keys())[:5]}"
+    )
+    chunked_transcripts = chunk_input_genes(list(all_transcripts.values()), 225)
+    async with aiohttp.ClientSession() as session:
+        tasks = [get_sequence_lengths(session, chunk) for chunk in chunked_transcripts]
+        mapped_sequences = await asyncio.gather(*tasks, return_exceptions=True)
+    if isinstance(mapped_sequences, BaseException):
+        logging.warning('Error in async API call. Exiting...')
+        return length_map
+    transcript_map = {
+        transcript: length
+        for hashmap in mapped_sequences
+        for transcript, length in hashmap.items()  # type: ignore
+    }
+    for gene in genes:
+        try:
+            length_map[gene] = set(
+                [
+                    symbol
+                    for symbol, transcript in all_transcripts.items()
+                    if transcript_map[transcript]
+                    + transcript_map[all_transcripts[gene]]
+                    > 2000
+                ]
+            )
+            logging.debug(f"Found {len(length_map[gene])} unworthy proteins for {gene}")
+        except KeyError:
+            logging.warning(f"Could not find transcript map for {gene}")
+
+    return length_map
 
 
 def find_subcellular_proteins(locations_df) -> defaultdict[str, set[str]]:
@@ -127,7 +185,7 @@ def find_interacting_proteins(all_ppis) -> defaultdict:
     return protein_dict
 
 
-def find_unsuitable_partners(
+async def find_unsuitable_partners(
     genes: list, locations_df: pd.DataFrame, all_ppis: list
 ) -> defaultdict:
     """
@@ -166,9 +224,15 @@ def find_unsuitable_partners(
         f"""Found proteins with the same subcellular location for
                   {len(same_subcellular_proteins.keys())} genes..."""
     )
+    logging.debug(
+        "Finding proteins that make complexes that are too long for folding..."
+    )
+    too_long_proteins = await find_too_long_proteins(genes, locations_df)
     for gene in genes:
         unsuitable_partners[gene] = (
-            interacting_proteins[gene] | same_subcellular_proteins[gene]
+            interacting_proteins[gene]
+            | same_subcellular_proteins[gene]
+            | too_long_proteins[gene]
         )  # Set union
     return unsuitable_partners
 
@@ -263,6 +327,9 @@ async def main():  # pragma: no cover
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
     input_genes = parse_input_genes(args.gene_file)
+    logging.debug("Removing genes with no MANE transcript...")
+    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
+    input_genes = [gene for gene in input_genes if gene in mane_df["symbol"].values]
     ground_truth_out_genes = remove_ground_truth_data(
         input_genes,
         cfg.GROUND_TRUTH_PATH,
@@ -293,7 +360,7 @@ async def main():  # pragma: no cover
     logging.info(f"Finished curation in {round(finish - start, 2)} second(s)")
     logging.info(f"Curated a total of {len(all_ppis)} PPIs...")
     logging.debug("Finding unsuitable partners for each gene...")
-    unsuitable_partners = find_unsuitable_partners(
+    unsuitable_partners = await find_unsuitable_partners(
         ground_truth_out_genes, locations_df, all_ppis
     )
     logging.debug(f"Found unsuitable partners for {len(unsuitable_partners)} genes...")

@@ -16,12 +16,12 @@ async def filter_out_long_sequences(
 ) -> list[str]:
     """Filter out sequences that make a protein
     pair greater than 2000 amino acids"""
-    split_ppi_symbols = []
+    ppi_symbols = []
     for ppi in ppis:
         symbol_a, symbol_b = ppi.split("*")
-        split_ppi_symbols.append(symbol_a)
-        split_ppi_symbols.append(symbol_b)
-    symbol_transcript_map = map_symbols_to_transcripts(split_ppi_symbols)
+        ppi_symbols.append(symbol_a)
+        ppi_symbols.append(symbol_b)
+    symbol_transcript_map = map_symbols_to_transcripts(ppi_symbols)
     start = time.perf_counter()
     aa_count = await get_sequence_lengths(session, list(symbol_transcript_map.values()))
     finish = time.perf_counter()

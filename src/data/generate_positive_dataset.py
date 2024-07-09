@@ -78,6 +78,11 @@ async def main():  # pragma: no cover
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
     input_genes = parse_input_genes(args.infile)
+    logging.debug(f"Found a total of {len(input_genes)} genes...")
+    logging.debug("Removing genes with no MANE transcript...")
+    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
+    input_genes = [gene for gene in input_genes if gene in mane_df["symbol"].values]
+    logging.debug(f"Using a total of {len(input_genes)} genes...")
     ground_truth_out_genes = remove_ground_truth_data(
         input_genes,
         cfg.GROUND_TRUTH_PATH,
@@ -98,7 +103,6 @@ async def main():  # pragma: no cover
     ppis = [ppi for sublist in ppi_lists for ppi in sublist]
     logging.info(f"Curated a total of {len(ppis)} high confidence PPIs...")
     logging.debug("Filtering out genes that don't have a canonical MANE transcript...")
-    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
     mane_ppis = [ppi for ppi in ppis if ppi_in_MANE(ppi, mane_df)]
     logging.debug(
         f"Found a total of {len(ppis)} genes after filtering for MANE transcripts..."

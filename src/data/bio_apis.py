@@ -29,10 +29,15 @@ async def get_sequence_lengths(
     )
 
     if response.status != 200:
-        logging.warning(
-            f"Unable to retrieve sequence for one of the following:\n{ensembl_transcript_ids}"
+        logging.warning("Unable to retrieve a chunk of sequences, retrying...")
+        response = await session.request(
+            "POST", url=request_url, headers=headers, json=data
         )
-        return {}
+        if response.status != 200:
+            logging.warning(
+                f"Still unable to retrieve sequence for one of the following:\n{ensembl_transcript_ids}\nexiting..."
+            )
+            return {}
 
     res = await response.json()
     aa_counts = {}
