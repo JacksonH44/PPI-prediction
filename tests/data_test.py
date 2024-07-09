@@ -10,14 +10,15 @@ from src.data.bio_apis import (
     filter_for_uniref30,
     find_uniprot_ids,
     get_interactors,
-    get_sequence_length,
+    get_sequence_lengths,
 )
 from src.data.combine_msa import extract_header_sequence_pairs
 from src.data.create_protein_triplets import find_triplets
+from src.data.data_filtering import filter_out_long_sequences
 from src.data.data_processing import (
     chunk_input_genes,
     find_unique_genes,
-    map_symbol_to_transcript,
+    map_symbols_to_transcripts,
     parse_input_genes,
     remove_ground_truth_data,
     UndersamplingError,
@@ -35,19 +36,28 @@ from src.data.generate_negative_dataset import (
 )
 
 
+def test_filter_out_long_sequences_success():
+    """Test the ability to filter out PPIs that have
+    total amino acid length > 2,000."""
+    test_ppis = ["TP53*PTK2", "WAS*FNBP1", "BRCA1*RHEB"]
+    expected_output = ["TP53*PTK2", "WAS*FNBP1"]
+    actual_output = filter_out_long_sequences(test_ppis)
+    assert actual_output == expected_output
+
+
 def test_map_symbol_to_transcript_success():
     """Test the functionality of mapping a symbol to its
     canonical Ensembl transcript"""
-    expected_result = 'ENST00000534324'
-    actual_result = map_symbol_to_transcript('CYB5RL')
+    expected_result = {"CYB5RL": "ENST00000534324", "GABARAP": "ENST00000302386"}
+    actual_result = map_symbols_to_transcripts(["CYB5RL", "GABARAP"])
     assert expected_result == actual_result
 
 
 def test_get_sequence_length_success():
     """Test that querying the Ensembl API for transcript
     sequence length is correct."""
-    expected_result = 315
-    actual_result = get_sequence_length("ENST00000534324")
+    expected_result = {"ENST00000534324": 315}
+    actual_result = get_sequence_lengths(["ENST00000534324"])
     assert expected_result == actual_result
 
 

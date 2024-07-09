@@ -20,10 +20,18 @@ class UndersamplingError(Exception):
     pass
 
 
-def map_symbol_to_transcript(symbol: str, reference_file: str = cfg.MANE_FILE):
-    """Map NCBI gene symbol to canonical """
-    transcript_df = pd.read_csv(reference_file, sep='\t', usecols=['symbol', 'Ensembl_nuc'])
-    return transcript_df[transcript_df['symbol'] == symbol]['Ensembl_nuc'].values[0].split('.')[0]
+def map_symbols_to_transcripts(
+    symbols: list[str], reference_file: str = cfg.MANE_FILE
+) -> dict[str, str]:
+    """Map NCBI gene symbol to canonical transcript"""
+    transcript_df = pd.read_csv(
+        reference_file, sep="\t", usecols=["symbol", "Ensembl_nuc"]
+    )
+    filtered_df = transcript_df[transcript_df["symbol"].isin(symbols)]
+    filtered_df.loc[:, "Ensembl_nuc"] = filtered_df["Ensembl_nuc"].apply(
+        lambda x: x.split(".")[0]
+    )
+    return (filtered_df.set_index("symbol").to_dict())["Ensembl_nuc"]
 
 
 def find_unique_genes(dataset_files) -> set[str]:

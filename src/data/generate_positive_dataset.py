@@ -14,7 +14,8 @@ import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
-from src.data.bio_apis import filter_for_uniref30, get_interactors
+from src.data.bio_apis import get_interactors
+from src.data.data_filtering import filter_out_long_sequences
 from src.data.data_processing import (
     chunk_input_genes,
     parse_input_genes,
@@ -102,8 +103,12 @@ async def main():  # pragma: no cover
     logging.debug(
         f"Found a total of {len(ppis)} genes after filtering for MANE transcripts..."
     )
-    logging.debug("Filtering out PPIs with genes not in UniProtSwissProt DB...")
-    ppis = filter_for_uniref30(mane_ppis)
+    logging.debug("Filtering out PPIs with total complex length > 2,000...")
+    chunked_ppis = chunk_input_genes(mane_ppis, 1000)
+    ppis = []
+    for chunk in chunked_ppis:
+        filtered_chunk = filter_out_long_sequences(chunk)
+        ppis = ppis + filtered_chunk
     logging.debug(f"Found a total of {len(ppis)} genes after filtering...")
     write_ppi_file(ppis, args.outfile)
 

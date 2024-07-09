@@ -14,20 +14,28 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
 
 
-def get_sequence_length(ensembl_transcript_id) -> int:
+def get_sequence_lengths(ensembl_transcript_ids: list[str]) -> dict[str, int]:
     """Query the Ensembl API to get the number of amino acids in a sequence"""
-    lookup = f"/lookup/id/{ensembl_transcript_id}?expand=1"
+    lookup = "/lookup/id"
     headers = {"Content-Type": "application/json"}
-    response = requests.get(cfg.ENSEMBL_BASE_URL + lookup, headers=headers)
+    data = {"ids": ensembl_transcript_ids, "expand": 1}
+    logging.debug(f"Calling Ensembl API with {len(ensembl_transcript_ids)} transcripts")
+    response = requests.post(cfg.ENSEMBL_BASE_URL + lookup, headers=headers, json=data)
 
-    if not response.ok:
+    if response.status_code != 200:
         logging.warning(
-            f"Unable to retrieve amino acid sequence length for {ensembl_transcript_id}"
+            f"Unable to retrieve sequence for one of the following:\n{ensembl_transcript_ids}"
         )
-        return -1
+        res = response.json()
+        return {}
 
-    data = response.json()
-    return data["Translation"]["length"] if "Translation" in data else -1
+    res = response.json()
+    aa_counts = {}
+    for transcript in ensembl_transcript_ids:
+        if transcript in res and "Translation" in res[transcript]:
+            aa_counts[transcript] = res[transcript]["Translation"]["length"]
+    logging.debug(f"Found counts for {len(aa_counts.keys())} proteins...")
+    return aa_counts
 
 
 def find_uniprot_ids(transcripts: list[str]) -> dict[str, str]:
