@@ -14,7 +14,8 @@ import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
-from src.data.bio_apis import filter_for_uniref30, get_interactors
+from src.data.bio_apis import get_interactors
+from src.data.data_filtering import filter_out_long_sequences
 from src.data.data_processing import (
     chunk_input_genes,
     parse_input_genes,
@@ -77,6 +78,11 @@ async def main():  # pragma: no cover
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
     input_genes = parse_input_genes(args.infile)
+    logging.debug(f"Found a total of {len(input_genes)} genes...")
+    logging.debug("Removing genes with no MANE transcript...")
+    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
+    input_genes = [gene for gene in input_genes if gene in mane_df["symbol"].values]
+    logging.debug(f"Using a total of {len(input_genes)} genes...")
     ground_truth_out_genes = remove_ground_truth_data(
         input_genes,
         cfg.GROUND_TRUTH_PATH,
@@ -97,13 +103,16 @@ async def main():  # pragma: no cover
     ppis = [ppi for sublist in ppi_lists for ppi in sublist]
     logging.info(f"Curated a total of {len(ppis)} high confidence PPIs...")
     logging.debug("Filtering out genes that don't have a canonical MANE transcript...")
-    mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol"])
     mane_ppis = [ppi for ppi in ppis if ppi_in_MANE(ppi, mane_df)]
     logging.debug(
         f"Found a total of {len(ppis)} genes after filtering for MANE transcripts..."
     )
-    logging.debug("Filtering out PPIs with genes not in UniProtSwissProt DB...")
-    ppis = filter_for_uniref30(mane_ppis)
+    logging.debug("Filtering out PPIs with total complex length > 2,000...")
+    chunked_ppis = chunk_input_genes(mane_ppis, 250)
+    async with aiohttp.ClientSession() as session:
+        tasks = [filter_out_long_sequences(session, chunk) for chunk in chunked_ppis]
+        filtered_lists = await asyncio.gather(*tasks, return_exceptions=True)
+    ppis = [ppi for sublist in filtered_lists for ppi in sublist]
     logging.debug(f"Found a total of {len(ppis)} genes after filtering...")
     write_ppi_file(ppis, args.outfile)
 

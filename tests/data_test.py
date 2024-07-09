@@ -6,12 +6,19 @@ import pandas as pd
 
 from core import config as cfg
 from src.data.aws_utils import download_msa_from_openfold
-from src.data.bio_apis import filter_for_uniref30, find_uniprot_ids, get_interactors
+from src.data.bio_apis import (
+    filter_for_uniref30,
+    find_uniprot_ids,
+    get_interactors,
+    get_sequence_lengths,
+)
 from src.data.combine_msa import extract_header_sequence_pairs
 from src.data.create_protein_triplets import find_triplets
+from src.data.data_filtering import filter_out_long_sequences
 from src.data.data_processing import (
     chunk_input_genes,
     find_unique_genes,
+    map_symbols_to_transcripts,
     parse_input_genes,
     remove_ground_truth_data,
     UndersamplingError,
@@ -23,10 +30,62 @@ from src.data.generate_negative_dataset import (
     count_gene_symbols,
     find_interacting_proteins,
     find_subcellular_proteins,
+    find_too_long_proteins,
     find_unsuitable_partners,
     get_locations,
     randomly_select_partners,
 )
+
+
+@pytest.mark.asyncio
+async def test_find_too_long_proteins_success():
+    """Test that finding proteins that are too long
+    (>2,000 AAs) to combine with a gene of interest is
+    correct."""
+    location_df = pd.read_csv(
+        "tests/test_data/subcellular_location_test.csv", sep="\t", usecols=["Gene name"]
+    )
+    genes = ["ZFHX3", "PREX2", "MTCP1"]
+    expected_output = {
+        "ZFHX3": set(
+            ["PREX2", "ZFHX3", "MTCP1", "FANCE", "CRLF2", "CIC", "CHEK2", "CHD4"]
+        ),
+        "PREX2": set(["CHD4", "CHEK2", "CIC", "FANCE", "PREX2", "ZFHX3"]),
+        "MTCP1": set(["CHD4", "CIC", "ZFHX3"]),
+    }
+    actual_output = await find_too_long_proteins(genes, location_df)
+    assert actual_output == expected_output
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "input, expected_output",
+    [(["TP53*PTK2", "WAS*FNBP1", "BRCA1*RHEB"], ["TP53*PTK2", "WAS*FNBP1"])],
+)
+async def test_filter_out_long_sequences_success(input, expected_output):
+    """Test the ability to filter out PPIs that have
+    total amino acid length > 2,000."""
+    async with aiohttp.ClientSession() as session:
+        actual_output = await filter_out_long_sequences(session, input)
+    assert actual_output == expected_output
+
+
+def test_map_symbol_to_transcript_success():
+    """Test the functionality of mapping a symbol to its
+    canonical Ensembl transcript"""
+    expected_result = {"CYB5RL": "ENST00000534324", "GABARAP": "ENST00000302386"}
+    actual_result = map_symbols_to_transcripts(["CYB5RL", "GABARAP"])
+    assert expected_result == actual_result
+
+
+@pytest.mark.asyncio
+async def test_get_sequence_length_success():
+    """Test that querying the Ensembl API for transcript
+    sequence length is correct."""
+    expected_result = {"ENST00000534324": 315}
+    async with aiohttp.ClientSession() as session:
+        actual_result = await get_sequence_lengths(session, ["ENST00000534324"])
+    assert expected_result == actual_result
 
 
 def test_extract_header_sequence_pairs_success():
@@ -162,6 +221,7 @@ def test_count_gene_symbols_success(positive_ppis, expected_result):
     assert actual_result == expected_result
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "genes, locations_data, all_ppis, expected_result",
     [
@@ -186,20 +246,20 @@ def test_count_gene_symbols_success(positive_ppis, expected_result):
             },
             ["BRCA1*SMURF1", "KIT*FANCE", "BRCA1*HLF", "HLF*HLF"],
             {
-                "BRCA1": {"BRCA1", "FANCE", "HLF", "SMURF1"},
+                "BRCA1": {"BRCA1", "FANCE", "HLF", "SMURF1", "KIT"},
                 "FANCE": {"FANCE", "BRCA1", "HLF", "KIT"},
                 "HLF": {"HLF", "BRCA1", "FANCE"},
             },
         )
     ],
 )
-def test_find_unsuitable_partners_success(
+async def test_find_unsuitable_partners_success(
     genes, locations_data, all_ppis, expected_result
 ):
     """Test the functionality of finding all unsuitable partners for a list of
     genes"""
     locations_df = pd.DataFrame(data=locations_data)
-    actual_result = find_unsuitable_partners(genes, locations_df, all_ppis)
+    actual_result = await find_unsuitable_partners(genes, locations_df, all_ppis)
     assert actual_result == expected_result
 
 

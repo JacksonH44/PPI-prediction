@@ -41,6 +41,8 @@ biogrid:
         "synthetic rescue",
         "two-hybrid"
     ]
+ensembl:
+  base_url: "https://rest.ensembl.org"
 ground_truth:
   file_path: "data/raw/isoform_sequences.xlsx"
   sheet_name: "1A-Gene List"
