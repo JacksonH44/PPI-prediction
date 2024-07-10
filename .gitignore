@@ -182,3 +182,6 @@ test/test_data/test_gene2/
 
 # Config files
 config/config.yml
+
+# HPC specific files
+src/hpc/
