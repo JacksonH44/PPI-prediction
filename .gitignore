@@ -167,7 +167,6 @@ cython_debug/
 test/test_data/single_gene/*
 test/test_output/*
 data/interim/*
-data/processed/*
 
 # Log files
 log/*
