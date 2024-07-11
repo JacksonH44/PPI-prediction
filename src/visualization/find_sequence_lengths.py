@@ -13,6 +13,7 @@ import sys
 
 import aiohttp
 import matplotlib.pyplot as plt
+import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.data.bio_apis import get_sequence_lengths
@@ -21,6 +22,19 @@ from src.data.data_processing import (
     find_unique_genes,
     map_symbols_to_transcripts
 )
+
+
+def sort_complex_lengths(positive_file: str, negative_file: str, all_transcripts: dict[str, str], transcript_map: dict[str, int]) -> dict[str, int]:
+    """Sort complexes by their complex length."""
+    logging.debug('Generating hashmap of sorted protein complex lengths...')
+    pos = pd.read_csv(positive_file)
+    neg = pd.read_csv(negative_file)
+    pos['length'] = pos.apply(lambda row: transcript_map[all_transcripts[row.iloc[0]]] + transcript_map[all_transcripts[row.iloc[1]]], axis=1)
+    neg['length'] = neg.apply(lambda row: transcript_map[all_transcripts[row.iloc[0]]] + transcript_map[all_transcripts[row.iloc[1]]], axis=1)
+    dataset = pd.concat([pos, neg])
+    complex_lengths = {f"{row['gene_symbol_a']}_{row['gene_symbol_b']}": row['length'] for _, row in dataset.iterrows()}
+    complex_lengths = {symbol: length for symbol, length in sorted(complex_lengths.items(), key = lambda item: item[1])}
+    return complex_lengths
 
 
 def plot_lengths_distribution(lengths: list[str], save_path: str) -> None:
@@ -61,7 +75,7 @@ def parse_command_line():  # pragma: no cover
         "-i",
         "--visualization",
         type=str,
-        default="data/processed/length_distribution.png",
+        default="data/processed/protein_length_distribution.png",
         help="Path to output file of lengths histogram",
     )
     parser.add_argument(
@@ -112,6 +126,9 @@ async def main():  # pragma: no cover
     sorted_transcript_map = {transcript: length for transcript, length in sorted(transcript_map.items(), key = lambda item: item[1])}
     logging.debug('Plotting histogram of sequence lengths')
     plot_lengths_distribution(list(sorted_transcript_map.values()), args.visualization)
+    complex_lengths = sort_complex_lengths(args.positive, args.negative, all_transcripts, transcript_map)
+    logging.debug('Plotting histogram of complex lengths...')
+    plot_lengths_distribution(list(complex_lengths.values()), 'data/processed/complex_length_distribution.png')
 
 
 if __name__ == '__main__':  # pragma: no cover
