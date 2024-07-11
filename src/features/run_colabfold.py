@@ -9,6 +9,18 @@ import os
 import pandas as pd
 
 
+def find_msa(gene_symbol, msa_dir) -> str:
+    """Find the MSA for a given gene symbol in the MSA directory."""
+    all_msas = os.listdir(msa_dir)
+    msa_file = [msa for msa in all_msas if gene_symbol in msa]
+    # There should only be one entry in msa_file
+    if len(msa_file) == 1:
+        return msa_file[0]
+    else:
+        logging.warning(f'Could not find MSA file for {gene_symbol}')
+        return 'NA'
+
+
 def create_observations(filepath, lower, upper) -> pd.DataFrame:
     """Create a dataframe of all required observations."""
     dataframe = pd.read_csv(filepath, names=['gene_symbol_a', 'gene_symbol_b'], skiprows=lower+1, nrows=upper-lower+1)
@@ -16,13 +28,17 @@ def create_observations(filepath, lower, upper) -> pd.DataFrame:
     return dataframe
 
 
-def run_colabfold_script(lower, upper, pos_path, neg_path) -> None:
+def run_colabfold_script(lower, upper, pos_path, neg_path, msa_dir) -> None:
     """Run the colabfold script for each observation."""
     pos_dataset = create_observations(pos_path, lower, upper)
     neg_dataset = create_observations(neg_path, lower, upper)
-    combined_msas = []
-    for i in range(pos_dataset.shape[0]):
-        logging.debug(pos_dataset.iloc[i].values)
+    logging.debug('Finding MSA files for all observations...')
+    pos_dataset['gene_a_file'] = pos_dataset['gene_symbol_a'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
+    pos_dataset['gene_b_file'] = pos_dataset['gene_symbol_b'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
+    neg_dataset['gene_a_file'] = neg_dataset['gene_symbol_a'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
+    neg_dataset['gene_b_file'] = neg_dataset['gene_symbol_b'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
+    logging.debug(pos_dataset.head(3))
+    logging.debug(neg_dataset.head(3))
 
 
 def parse_command_line():  # pragma: no cover
