@@ -1,11 +1,12 @@
 """
 Get a report of all sequence/complex lengths, and write
-them to a file. Additionally, generate a figure of the 
+them to a file. Additionally, generate a figure of the
 distribution of protein sequence lengths.
 """
 
 import asyncio
 import argparse
+import csv
 import logging
 import math
 import os
@@ -20,30 +21,64 @@ from src.data.bio_apis import get_sequence_lengths
 from src.data.data_processing import (
     chunk_input_genes,
     find_unique_genes,
-    map_symbols_to_transcripts
+    map_symbols_to_transcripts,
 )
 
 
-def sort_complex_lengths(positive_file: str, negative_file: str, all_transcripts: dict[str, str], transcript_map: dict[str, int]) -> dict[str, int]:
+def save_sequence_lengths(
+    monomer_lengths: dict[str, int], multimer_lengths: dict[str, int], outfile: str
+) -> None:
+    """Write the combined multimer/monomers and
+    their lengths to a file that stores the name
+    of the complex and its sequence length."""
+    multimer_lengths.update(monomer_lengths)
+    all_lengths = {
+        symbol: length
+        for symbol, length in sorted(multimer_lengths.items(), key=lambda item: item[1])
+    }
+    with open(outfile, "w") as csv_file:
+        writer = csv.writer(csv_file)
+        writer.writerow(["symbol", "length"])
+        for symbol, length in all_lengths.items():
+            writer.writerow([symbol, length])
+
+
+def sort_complex_lengths(
+    positive_file: str,
+    negative_file: str,
+    all_transcripts: dict[str, str],
+    transcript_map: dict[str, int],
+) -> dict[str, int]:
     """Sort complexes by their complex length."""
-    logging.debug('Generating hashmap of sorted protein complex lengths...')
+    logging.debug("Generating hashmap of sorted protein complex lengths...")
     pos = pd.read_csv(positive_file)
     neg = pd.read_csv(negative_file)
-    pos['length'] = pos.apply(lambda row: transcript_map[all_transcripts[row.iloc[0]]] + transcript_map[all_transcripts[row.iloc[1]]], axis=1)
-    neg['length'] = neg.apply(lambda row: transcript_map[all_transcripts[row.iloc[0]]] + transcript_map[all_transcripts[row.iloc[1]]], axis=1)
+    pos["length"] = pos.apply(
+        lambda row: transcript_map[all_transcripts[row.iloc[0]]]
+        + transcript_map[all_transcripts[row.iloc[1]]],
+        axis=1,
+    )
+    neg["length"] = neg.apply(
+        lambda row: transcript_map[all_transcripts[row.iloc[0]]]
+        + transcript_map[all_transcripts[row.iloc[1]]],
+        axis=1,
+    )
     dataset = pd.concat([pos, neg])
-    complex_lengths = {f"{row['gene_symbol_a']}_{row['gene_symbol_b']}": row['length'] for _, row in dataset.iterrows()}
-    complex_lengths = {symbol: length for symbol, length in sorted(complex_lengths.items(), key = lambda item: item[1])}
+    complex_lengths = {
+        f"{row['gene_symbol_a']}_{row['gene_symbol_b']}": row["length"]
+        for _, row in dataset.iterrows()
+    }
     return complex_lengths
 
 
 def plot_lengths_distribution(lengths: list[str], save_path: str) -> None:
     """Plot a histogram of protein lengths."""
+    plt.figure()
     num_bins = int(math.sqrt(len(lengths)))
     plt.hist(lengths, bins=num_bins)
-    plt.xlabel('Sequence lengths')
-    plt.ylabel('Frequency')
-    plt.title('Distribution of Protein Sequence Lengths')
+    plt.xlabel("Sequence lengths")
+    plt.ylabel("Frequency")
+    plt.title("Distribution of Protein Sequence Lengths")
     plt.savefig(save_path)
 
 
@@ -51,18 +86,18 @@ def parse_command_line():  # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        '-p',
-        '--positive',
+        "-p",
+        "--positive",
         type=str,
-        default='data/processed/positive_ppis.csv',
-        help='Path to the positive PPIs dataset'
+        default="data/processed/positive_ppis.csv",
+        help="Path to the positive PPIs dataset",
     )
     parser.add_argument(
-        '-n',
-        '--negative',
+        "-n",
+        "--negative",
         type=str,
-        default='data/processed/negative_ppis.csv',
-        help='Path to the negative PPIs dataset'
+        default="data/processed/negative_ppis.csv",
+        help="Path to the negative PPIs dataset",
     )
     parser.add_argument(
         "-o",
@@ -75,8 +110,8 @@ def parse_command_line():  # pragma: no cover
         "-i",
         "--visualization",
         type=str,
-        default="data/processed/protein_length_distribution.png",
-        help="Path to output file of lengths histogram",
+        default="data/processed",
+        help="Path to output folder of lengths histogram",
     )
     parser.add_argument(
         "-v",
@@ -111,25 +146,39 @@ async def main():  # pragma: no cover
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
     all_genes = find_unique_genes([args.positive, args.negative])
     all_transcripts = map_symbols_to_transcripts(list(all_genes))
-    chunked_transcripts = chunk_input_genes(list(all_transcripts.values()), chunk_size=200)
+    chunked_transcripts = chunk_input_genes(
+        list(all_transcripts.values()), chunk_size=200
+    )
     async with aiohttp.ClientSession() as session:
         tasks = [get_sequence_lengths(session, chunk) for chunk in chunked_transcripts]
         mapped_sequences = await asyncio.gather(*tasks, return_exceptions=True)
     if isinstance(mapped_sequences, BaseException):
-        logging.warning('Error in async API call. Exiting...')
+        logging.warning("Error in async API call. Exiting...")
         return
-    transcript_map = {
+    length_map = {
         transcript: length
         for hashmap in mapped_sequences
         for transcript, length in hashmap.items()  # type: ignore
     }
-    sorted_transcript_map = {transcript: length for transcript, length in sorted(transcript_map.items(), key = lambda item: item[1])}
-    logging.debug('Plotting histogram of sequence lengths')
-    plot_lengths_distribution(list(sorted_transcript_map.values()), args.visualization)
-    complex_lengths = sort_complex_lengths(args.positive, args.negative, all_transcripts, transcript_map)
-    logging.debug('Plotting histogram of complex lengths...')
-    plot_lengths_distribution(list(complex_lengths.values()), 'data/processed/complex_length_distribution.png')
+    monomer_lengths = {
+        symbol: length_map[all_transcripts[symbol]] for symbol in all_genes
+    }
+    logging.debug("Plotting histogram of sequence lengths...")
+    plot_lengths_distribution(
+        list(monomer_lengths.values()),
+        f"{args.visualization}/protein_length_distribution.png",
+    )
+    multimer_lengths = sort_complex_lengths(
+        args.positive, args.negative, all_transcripts, length_map
+    )
+    logging.debug("Plotting histogram of complex lengths...")
+    plot_lengths_distribution(
+        list(multimer_lengths.values()),
+        f"{args.visualization}/complex_length_distribution.png",
+    )
+    logging.info(f"Saving sequence lengths to {args.outfile}...")
+    save_sequence_lengths(monomer_lengths, multimer_lengths, args.outfile)
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     asyncio.run(main())

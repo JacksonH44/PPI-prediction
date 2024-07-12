@@ -131,7 +131,7 @@ async def find_too_long_proteins(
         tasks = [get_sequence_lengths(session, chunk) for chunk in chunked_transcripts]
         mapped_sequences = await asyncio.gather(*tasks, return_exceptions=True)
     if isinstance(mapped_sequences, BaseException):
-        logging.warning('Error in async API call. Exiting...')
+        logging.warning("Error in async API call. Exiting...")
         return length_map
     transcript_map = {
         transcript: length
