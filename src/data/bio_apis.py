@@ -22,7 +22,6 @@ async def get_sequence_lengths(
     headers = {"Content-Type": "application/json"}
     data = {"ids": ensembl_transcript_ids, "expand": 1}
     logging.debug(f"Calling Ensembl API with {len(ensembl_transcript_ids)} transcripts")
-    # response = requests.post(cfg.ENSEMBL_BASE_URL + lookup, headers=headers, json=data)
     request_url = cfg.ENSEMBL_BASE_URL + lookup
     response = await session.request(
         "POST", url=request_url, headers=headers, json=data
