@@ -5,8 +5,15 @@ Run ColabFold for protein pairs in a dataset.
 import argparse
 import logging
 import os
+import sys
 
 import pandas as pd
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+from src.data.combine_msa import (
+    extract_header_sequence_pairs,
+    write_combined_a3m
+)
 
 
 def find_msa(gene_symbol, msa_dir) -> str:
@@ -21,25 +28,34 @@ def find_msa(gene_symbol, msa_dir) -> str:
         return 'NA'
 
 
+def prep_msas(symbol: str, msa_dir: str) -> str:
+    """Create ColabFold-usable MSA for the monomer/multimer observation."""
+    if '_' in symbol:  # multimer
+        protein_a, protein_b = symbol.split('_')
+        msa_a, msa_b = find_msa(protein_a, msa_dir), find_msa(protein_b, msa_dir)
+        sequences_a = extract_header_sequence_pairs(f'{msa_dir}/{msa_a}')
+        sequences_b = extract_header_sequence_pairs(f'{msa_dir}/{msa_b}')
+        combined_msa_path = f'{msa_dir}/multimer/{symbol}.msa.a3m'
+        write_combined_a3m(sequences_a, sequences_b, combined_msa_path)
+        return combined_msa_path
+    else:  # monomer
+        msa = find_msa(symbol, msa_dir)
+        return f'{msa_dir}/{msa}'
+
+
 def create_observations(filepath, lower, upper) -> pd.DataFrame:
     """Create a dataframe of all required observations."""
-    dataframe = pd.read_csv(filepath, names=['gene_symbol_a', 'gene_symbol_b'], skiprows=lower+1, nrows=upper-lower+1)
-    dataframe['file'] = dataframe['gene_symbol_a'] + '_' + dataframe['gene_symbol_b']
+    dataframe = pd.read_csv(filepath, names=['symbol', 'length'], skiprows=lower+1, nrows=upper-lower+1)
+    logging.debug(dataframe.head(5))
     return dataframe
 
 
-def run_colabfold_script(lower, upper, pos_path, neg_path, msa_dir) -> None:
+def run_colabfold_script(dataset_path, lower, upper, msa_dir) -> None:
     """Run the colabfold script for each observation."""
-    pos_dataset = create_observations(pos_path, lower, upper)
-    neg_dataset = create_observations(neg_path, lower, upper)
-    logging.debug('Finding MSA files for all observations...')
-    pos_dataset['gene_a_file'] = pos_dataset['gene_symbol_a'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
-    pos_dataset['gene_b_file'] = pos_dataset['gene_symbol_b'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
-    neg_dataset['gene_a_file'] = neg_dataset['gene_symbol_a'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
-    neg_dataset['gene_b_file'] = neg_dataset['gene_symbol_b'].apply(lambda gene_symbol: find_msa(gene_symbol, msa_dir))
-    logging.debug(pos_dataset.head(3))
-    logging.debug(neg_dataset.head(3))
-
+    df = create_observations(dataset_path, lower, upper)
+    df['file'] = df['symbol'].apply(lambda symbol: prep_msas(symbol, msa_dir))
+    logging.debug(df.head(5))
+    
 
 def parse_command_line():  # pragma: no cover
     """Parse command line arguments."""
@@ -59,18 +75,11 @@ def parse_command_line():  # pragma: no cover
         help='Which observation the program should finish running ColabFold on (default: 10,000)'
     )
     parser.add_argument(
-        '-p',
-        '--positive_dataset',
+        '-d',
+        '--dataset_path',
         type=str,
-        default='data/processed/positive_ppis.csv',
-        help='The path to the positive dataset'
-    )
-    parser.add_argument(
-        '-n',
-        '--negative_dataset',
-        type=str,
-        default='data/processed/negative_ppis.csv',
-        help='The path to the negative dataset'
+        default='data/interim/sequence_lengths.csv',
+        help='The path to the sorted dataset'
     )
     parser.add_argument(
         '-m',
@@ -110,7 +119,14 @@ def main():  # pragma: no cover
             file.write("")  # Write an empty string to create the file
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
-    run_colabfold_script(args.lower_bound, args.upper_bound, args.positive_dataset, args.negative_dataset, args.msa_dir)
+    if not os.path.exists(args.dataset_path):
+        logging.warning(f'The dataset path {args.dataset_path} does not exist. Cancelling operation...')
+        return
+    if not os.path.exists(args.dataset_path):
+        logging.warning(f'The MSA directory {args.msa_dir} does not exist. Cancelling operation...')
+        return
+    logging.info('Running colabfold script...')
+    run_colabfold_script(args.dataset_path, args.lower_bound, args.upper_bound, args.msa_dir)
 
 if __name__ == '__main__':  # pragma: no cover
     main()
