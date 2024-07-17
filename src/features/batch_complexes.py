@@ -27,6 +27,7 @@ def assign_batch(input_file: str, output_file: str, batch_size: int) -> None:
         reader = csv.reader(infile)
         batch_number = 0
         num_batch_instances = 0
+        next(reader, None)  # skip header
         for row in reader:
             row.append(str(batch_number))
             new_lines.append(row)
@@ -37,6 +38,7 @@ def assign_batch(input_file: str, output_file: str, batch_size: int) -> None:
 
     with open(output_file, "w") as outfile:
         writer = csv.writer(outfile)
+        writer.writerow(['symbol', 'length', 'batch_number'])
         for line in new_lines:
             writer.writerow(line)
 
