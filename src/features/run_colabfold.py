@@ -41,28 +41,35 @@ def prep_msas(symbol: str, msa_dir: str) -> str:
         return f"{msa_dir}/{msa}"
 
 
-def create_observations(filepath, lower, upper) -> pd.DataFrame:
+def create_observations(filepath, batch_number) -> pd.DataFrame:
     """Create a dataframe of all required observations."""
-    dataframe = pd.read_csv(
+    df = pd.read_csv(
         filepath,
-        names=["symbol", "length"],
-        skiprows=lower + 1,
-        nrows=upper - lower + 1,
     )
-    logging.debug(dataframe.head(5))
-    return dataframe
+    df = df[df['batch_number'] == batch_number]
+    logging.debug(df.head(5))
+    return df
+
+
+def run_subprocess(colabfold_script_path: str, file_name: str) -> None:
+    """Run the ColabFold subprocess."""
+    if file_name.split('/')[-1][0 : 4] == 'ENST':  # Monomer file
+        output_name = (file_name.split('_')[-1]).split('.')[0]
+    else:
+        output_name = (file_name.split('/')[-1]).split('.')[0]
+    subprocess.run(['bash', colabfold_script_path, file_name, output_name])
 
 
 def run_colabfold_script(
-    dataset_path, lower, upper, msa_dir, colabfold_script_path
+    dataset_path, batch_number, msa_dir, colabfold_script_path
 ) -> None:
     """Run the colabfold script for each observation."""
-    df = create_observations(dataset_path, lower, upper)
+    df = create_observations(dataset_path, batch_number)
     logging.debug("Preparing MSAs for ColabFold call...")
     df["file"] = df["symbol"].apply(lambda symbol: prep_msas(symbol, msa_dir))
     logging.debug(df.head(5))
     df["file"].apply(
-        lambda file_name: subprocess.call([colabfold_script_path, file_name])
+        lambda file_name: run_subprocess(colabfold_script_path, file_name)
     )
 
 
@@ -70,18 +77,9 @@ def parse_command_line():  # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "-b",
-        "--lower_bound",
+        "batch_number",
         type=int,
-        default=0,
-        help="Which observation the program should start running ColabFold on (default: 0)",
-    )
-    parser.add_argument(
-        "-u",
-        "--upper_bound",
-        type=int,
-        default=10000,
-        help="Which observation the program should finish running ColabFold on (default: 10,000)",
+        help="Which batch number ColabFold should run on",
     )
     parser.add_argument(
         "-d",
@@ -94,11 +92,11 @@ def parse_command_line():  # pragma: no cover
         "-m",
         "--msa_dir",
         type=str,
-        default="/cluster/projects/kumargroup/jackson/msas/",
+        default="/cluster/projects/kumargroup/jackson/msas",
         help="The path to the MSA files",
     )
     parser.add_argument(
-        "-c", "--colabfold_path", type=str, default="./run_colabfold.sh"
+        "-c", "--colabfold_path", type=str, default="./jobs/run_colabfold.sh"
     )
     parser.add_argument(
         "-v",
@@ -144,8 +142,7 @@ def main():  # pragma: no cover
     logging.info("Running colabfold script...")
     run_colabfold_script(
         args.dataset_path,
-        args.lower_bound,
-        args.upper_bound,
+        args.batch_number,
         args.msa_dir,
         args.colabfold_path,
     )
