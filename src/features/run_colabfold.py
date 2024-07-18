@@ -5,6 +5,7 @@ Run ColabFold for protein pairs in a dataset.
 import argparse
 import logging
 import os
+import shutil
 import subprocess
 import sys
 
@@ -21,14 +22,19 @@ def find_msa(gene_symbol, msa_dir) -> str:
     # There should only be one entry in msa_file
     if len(msa_file) == 1:
         return msa_file[0]
-    else:
-        logging.warning(f"Could not find MSA file for {gene_symbol}")
-        return "NA"
+    elif len(msa_file) > 1:
+        # There are similar gene names
+        msa_file = [msa for msa in msa_file if gene_symbol == msa.split('.')[0].split('_')[1]]
+        if len(msa_file) != 1:
+            logging.warning(f"Could not find MSA file for {gene_symbol}")
+            return "NA"
+    return msa_file[0]
 
 
 def prep_msas(symbol: str, msa_dir: str) -> str:
     """Create ColabFold-usable MSA for the monomer/multimer observation."""
     if "_" in symbol:  # multimer
+        logging.debug(f'Prepping MSA for {symbol}...')
         protein_a, protein_b = symbol.split("_")
         msa_a, msa_b = find_msa(protein_a, msa_dir), find_msa(protein_b, msa_dir)
         sequences_a = extract_header_sequence_pairs(f"{msa_dir}/{msa_a}")
@@ -51,15 +57,6 @@ def create_observations(filepath, batch_number) -> pd.DataFrame:
     return df
 
 
-def run_subprocess(colabfold_script_path: str, file_name: str) -> None:
-    """Run the ColabFold subprocess."""
-    if file_name.split('/')[-1][0 : 4] == 'ENST':  # Monomer file
-        output_name = (file_name.split('_')[-1]).split('.')[0]
-    else:
-        output_name = (file_name.split('/')[-1]).split('.')[0]
-    subprocess.run(['bash', colabfold_script_path, file_name, output_name])
-
-
 def run_colabfold_script(
     dataset_path, batch_number, msa_dir, colabfold_script_path
 ) -> None:
@@ -68,9 +65,12 @@ def run_colabfold_script(
     logging.debug("Preparing MSAs for ColabFold call...")
     df["file"] = df["symbol"].apply(lambda symbol: prep_msas(symbol, msa_dir))
     logging.debug(df.head(5))
-    df["file"].apply(
-        lambda file_name: run_subprocess(colabfold_script_path, file_name)
-    )
+    files = df['file'].to_list()
+    input_path = os.path.join(msa_dir, str(batch_number))
+    os.mkdir(input_path)
+    for msa_file in files:
+        shutil.move(os.path.join(msa_dir, msa_file), input_path)
+    subprocess.run(['sbatch', colabfold_script_path, input_path])
 
 
 def parse_command_line():  # pragma: no cover
