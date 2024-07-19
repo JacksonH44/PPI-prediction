@@ -1,6 +1,6 @@
 """
-Scan the ColabFold output logs to find the highest pLDDT 
-score, the best performing model, and whether there was 
+Scan the ColabFold output logs to find the highest pLDDT
+score, the best performing model, and whether there was
 an error in the run.
 """
 
@@ -14,11 +14,11 @@ import pandas as pd
 
 def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
     """Write stats to the stats output file."""
-    plddt = line.split(' ')[1].split('=')[1]
-    iptm = line.split(' ')[2].split('=')[1]
-    best_model = line.split(' ')[0].split('_')[6]
-    logging.debug(f'{symbol} - best model: {best_model} pLDDT: {plddt} ipTM: {iptm}')
-    with open(stats_file, 'a') as stats:
+    plddt = line.split(" ")[1].split("=")[1]
+    iptm = line.split(" ")[2].split("=")[1]
+    best_model = line.split(" ")[0].split("_")[6]
+    logging.debug(f"{symbol} - best model: {best_model} pLDDT: {plddt} ipTM: {iptm}")
+    with open(stats_file, "a") as stats:
         writer = csv.writer(stats)
         writer.writerow([symbol, best_model, plddt, iptm])
 
@@ -26,13 +26,13 @@ def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
 def collect_symbols(data_dir: str) -> list[str]:
     """Crawl the data directory and return all symbols
     that ColabFold ran on."""
-    omit = set(['cite.bibtex', 'config.json', 'log.txt'])
+    omit = set(["cite.bibtex", "config.json", "log.txt"])
     symbol_set = set()
     for file in os.listdir(data_dir):
-        name = file.split('.')[0]
+        name = file.split(".")[0]
         if file not in omit:
             symbol_set.add(name)
-    
+
     return list(symbol_set)
 
 
@@ -40,7 +40,7 @@ def collect_stats(data_dir: str, stats_file: str):
     """
     Scan the data directory and collect stats
     for each new complex created by ColabFold.
-    
+
     Parameters
     ----------
     data_dir : str
@@ -51,27 +51,28 @@ def collect_stats(data_dir: str, stats_file: str):
     """
     if os.path.exists(stats_file):
         symbols_needed = collect_symbols(data_dir)
-        symbols_computed = pd.read_csv(
-            stats_file,
-            usecols=['symbol']
-        )['symbol'].to_list()
+        symbols_computed = pd.read_csv(stats_file, usecols=["symbol"])[
+            "symbol"
+        ].to_list()
         symbols = list(set(symbols_needed) - set(symbols_computed))
     else:
         symbols = collect_symbols(data_dir)
-        with open(stats_file, 'w') as stats:
+        with open(stats_file, "w") as stats:
             writer = csv.writer(stats)
-            writer.writerow(['symbol', 'best_model', 'pLDDT', 'ipTM'])
-    logfile = os.path.join(data_dir, 'log.txt')
-    with open(logfile, 'r') as log:
+            writer.writerow(["symbol", "best_model", "pLDDT", "ipTM"])
+    logfile = os.path.join(data_dir, "log.txt")
+    with open(logfile, "r") as log:
         lines = log.readlines()
-        lines = [line.split(' ', maxsplit=2)[2] for line in lines]
-        lines = [line.rstrip('\n') for line in lines]
+        lines = [line.split(" ", maxsplit=2)[2] for line in lines]
+        lines = [line.rstrip("\n") for line in lines]
         for symbol in symbols:
             query_start = [line for line in lines if symbol in line][0]
             query_start_index = lines.index(query_start)
             multimer_string = "reranking models by 'multimer' metric"
             if multimer_string in lines[query_start_index:]:
-                idx = lines.index("reranking models by 'multimer' metric", query_start_index)
+                idx = lines.index(
+                    "reranking models by 'multimer' metric", query_start_index
+                )
                 write_to_stats_file(stats_file, lines[idx + 1], symbol)
 
 
@@ -79,18 +80,18 @@ def parse_command_line():  # pragma : no cover
     """Parse the command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        '-d',
-        '--data_directory',
+        "-d",
+        "--data_directory",
         type=str,
-        default='data/processed/colabfold/0',
-        help='The path to the directory holding all finished ColabFold outputs',
+        default="data/processed/colabfold/0",
+        help="The path to the directory holding all finished ColabFold outputs",
     )
     parser.add_argument(
         "-s",
         "--stats_file",
         type=str,
-        default='data/processed/colabfold_stats.csv',
-        help='The path to the file where you wish to write the ColabFold stats',
+        default="data/processed/colabfold_stats.csv",
+        help="The path to the file where you wish to write the ColabFold stats",
     )
     parser.add_argument(
         "-v",
@@ -107,6 +108,7 @@ def parse_command_line():  # pragma : no cover
     )
     args = parser.parse_args()
     return args
+
 
 def main():  # pragma: no cover
     """Run the command line program."""
@@ -125,5 +127,5 @@ def main():  # pragma: no cover
     collect_stats(args.data_directory, args.stats_file)
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     main()

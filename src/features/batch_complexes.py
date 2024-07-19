@@ -38,7 +38,7 @@ def assign_batch(input_file: str, output_file: str, batch_size: int) -> None:
 
     with open(output_file, "w") as outfile:
         writer = csv.writer(outfile)
-        writer.writerow(['symbol', 'length', 'batch_number'])
+        writer.writerow(["symbol", "length", "batch_number"])
         for line in new_lines:
             writer.writerow(line)
 

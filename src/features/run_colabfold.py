@@ -24,7 +24,9 @@ def find_msa(gene_symbol, msa_dir) -> str:
         return msa_file[0]
     elif len(msa_file) > 1:
         # There are similar gene names
-        msa_file = [msa for msa in msa_file if gene_symbol == msa.split('.')[0].split('_')[1]]
+        msa_file = [
+            msa for msa in msa_file if gene_symbol == msa.split(".")[0].split("_")[1]
+        ]
         if len(msa_file) != 1:
             logging.warning(f"Could not find MSA file for {gene_symbol}")
             return "NA"
@@ -34,7 +36,7 @@ def find_msa(gene_symbol, msa_dir) -> str:
 def prep_msas(symbol: str, msa_dir: str) -> str:
     """Create ColabFold-usable MSA for the monomer/multimer observation."""
     if "_" in symbol:  # multimer
-        logging.debug(f'Prepping MSA for {symbol}...')
+        logging.debug(f"Prepping MSA for {symbol}...")
         protein_a, protein_b = symbol.split("_")
         msa_a, msa_b = find_msa(protein_a, msa_dir), find_msa(protein_b, msa_dir)
         sequences_a = extract_header_sequence_pairs(f"{msa_dir}/{msa_a}")
@@ -52,7 +54,7 @@ def create_observations(filepath, batch_number) -> pd.DataFrame:
     df = pd.read_csv(
         filepath,
     )
-    df = df[df['batch_number'] == batch_number]
+    df = df[df["batch_number"] == batch_number]
     logging.debug(df.head(5))
     return df
 
@@ -65,12 +67,12 @@ def run_colabfold_script(
     logging.debug("Preparing MSAs for ColabFold call...")
     df["file"] = df["symbol"].apply(lambda symbol: prep_msas(symbol, msa_dir))
     logging.debug(df.head(5))
-    files = df['file'].to_list()
+    files = df["file"].to_list()
     input_path = os.path.join(msa_dir, str(batch_number))
     os.makedirs(input_path, exist_ok=True)
     for msa_file in files:
         shutil.move(os.path.join(msa_dir, msa_file), input_path)
-    subprocess.run(['sbatch', colabfold_script_path, input_path, str(batch_number)])
+    subprocess.run(["sbatch", colabfold_script_path, input_path, str(batch_number)])
 
 
 def parse_command_line():  # pragma: no cover
