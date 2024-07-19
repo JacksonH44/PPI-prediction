@@ -67,10 +67,10 @@ def run_colabfold_script(
     logging.debug(df.head(5))
     files = df['file'].to_list()
     input_path = os.path.join(msa_dir, str(batch_number))
-    os.mkdir(input_path)
+    os.makedirs(input_path, exist_ok=True)
     for msa_file in files:
         shutil.move(os.path.join(msa_dir, msa_file), input_path)
-    subprocess.run(['sbatch', colabfold_script_path, input_path])
+    subprocess.run(['sbatch', colabfold_script_path, input_path, str(batch_number)])
 
 
 def parse_command_line():  # pragma: no cover
