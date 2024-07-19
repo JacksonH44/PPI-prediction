@@ -9,6 +9,32 @@ import csv
 import logging
 import os
 
+import pandas as pd
+
+
+def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
+    """Write stats to the stats output file."""
+    plddt = line.split(' ')[1].split('=')[1]
+    iptm = line.split(' ')[2].split('=')[1]
+    best_model = line.split(' ')[0].split('_')[6]
+    logging.debug(f'{symbol} - best model: {best_model} pLDDT: {plddt} ipTM: {iptm}')
+    with open(stats_file, 'a') as stats:
+        writer = csv.writer(stats)
+        writer.writerow([symbol, plddt, iptm, best_model, finished])
+
+
+def collect_symbols(data_dir: str) -> list[str]:
+    """Crawl the data directory and return all symbols
+    that ColabFold ran on."""
+    omit = set(['cite.bibtex', 'config.json', 'log.txt'])
+    symbol_set = set()
+    for file in os.listdir(data_dir):
+        name = file.split('.')[0]
+        if file not in omit:
+            symbol_set.add(name)
+    
+    return list(symbol_set)
+
 
 def collect_stats(data_dir: str, stats_file: str):
     """
@@ -21,42 +47,32 @@ def collect_stats(data_dir: str, stats_file: str):
         Path to the data directory
     stats_file : str
         Path to the stats file. Assumes stats_file is a CSV
-        file with headers symbol,plddt,iptm,best_model,finished
+        file with headers symbol,plddt,iptm,best_model
     """
     if os.path.exists(stats_file):
-        symbols_needed = os.listdir(data_dir)
+        symbols_needed = collect_symbols(data_dir)
         symbols_computed = pd.read_csv(
             stats_file,
             usecols=['symbol']
         )['symbol'].to_list()
         symbols = list(set(symbols_needed) - set(symbols_computed))
     else:
-        symbols = os.listdir(data_dir)
+        symbols = collect_symbols(data_dir)
         with open(stats_file, 'w') as stats:
             writer = csv.writer(stats)
-            writer.writerow(['symbol', 'pLDDT', 'ipTM', 'best_model', 'finished'])
-    for symbol in symbols:
-        logfile = os.path.join(data_dir, symbol, 'log.txt')
-        with open(logfile, 'r') as log:
-            lines = log.readlines()
-            lines = [line.split(' ', maxsplit=2)[2] for line in lines]
-            lines = [line.rstrip('\n') for line in lines]
-            finished = False
-            plddt = '-1'
-            iptm = '-1'
-            best_model = 'NA'
-            if lines[-1] == 'Done':
-                finished = True
-                idx = lines.index("reranking models by 'plddt' metric")
-                if idx < len(lines) - 1:
-                    best = lines[idx + 1]
-                    plddt = best.split(' ')[1].split('=')[1]
-                    iptm = best.split(' ')[2].split('=')[1]
-                    best_model = best.split(' ')[0].split('_')[5]
-                    logging.debug(f'pLDDT: {plddt} ipTM: {iptm} best model: {best_model}')
-            with open(stats_file, 'a') as stats:
-                writer = csv.writer(stats)
-                writer.writerow([symbol, plddt, iptm, best_model, finished])
+            writer.writerow(['symbol', 'best_model', 'pLDDT', 'ipTM'])
+    logfile = os.path.join(data_dir, 'log.txt')
+    with open(logfile, 'r') as log:
+        lines = log.readlines()
+        lines = [line.split(' ', maxsplit=2)[2] for line in lines]
+        lines = [line.rstrip('\n') for line in lines]
+        for symbol in symbols:
+            query_start = [line for line in lines if symbol in line][0]
+            query_start_index = lines.index(query_start)
+            multimer_string = "reranking models by 'multimer' metric"
+            if multimer_string in lines[query_start_index:]:
+                idx = lines.index("reranking models by 'multimer' metric", query_start_index)
+                write_to_stats_file(stats_file, lines[idx + 1], symbol)
 
 
 def parse_command_line():  # pragma : no cover
@@ -66,7 +82,7 @@ def parse_command_line():  # pragma : no cover
         '-d',
         '--data_directory',
         type=str,
-        default='data/processed/colabfold',
+        default='data/processed/colabfold/0',
         help='The path to the directory holding all finished ColabFold outputs',
     )
     parser.add_argument(
