@@ -5,6 +5,7 @@ Run ColabFold for protein pairs in a dataset.
 import argparse
 import logging
 import os
+import shutil
 import subprocess
 import sys
 
@@ -21,14 +22,21 @@ def find_msa(gene_symbol, msa_dir) -> str:
     # There should only be one entry in msa_file
     if len(msa_file) == 1:
         return msa_file[0]
-    else:
-        logging.warning(f"Could not find MSA file for {gene_symbol}")
-        return "NA"
+    elif len(msa_file) > 1:
+        # There are similar gene names
+        msa_file = [
+            msa for msa in msa_file if gene_symbol == msa.split(".")[0].split("_")[1]
+        ]
+        if len(msa_file) != 1:
+            logging.warning(f"Could not find MSA file for {gene_symbol}")
+            return "NA"
+    return msa_file[0]
 
 
 def prep_msas(symbol: str, msa_dir: str) -> str:
     """Create ColabFold-usable MSA for the monomer/multimer observation."""
     if "_" in symbol:  # multimer
+        logging.debug(f"Prepping MSA for {symbol}...")
         protein_a, protein_b = symbol.split("_")
         msa_a, msa_b = find_msa(protein_a, msa_dir), find_msa(protein_b, msa_dir)
         sequences_a = extract_header_sequence_pairs(f"{msa_dir}/{msa_a}")
@@ -41,47 +49,39 @@ def prep_msas(symbol: str, msa_dir: str) -> str:
         return f"{msa_dir}/{msa}"
 
 
-def create_observations(filepath, lower, upper) -> pd.DataFrame:
+def create_observations(filepath, batch_number) -> pd.DataFrame:
     """Create a dataframe of all required observations."""
-    dataframe = pd.read_csv(
+    df = pd.read_csv(
         filepath,
-        names=["symbol", "length"],
-        skiprows=lower + 1,
-        nrows=upper - lower + 1,
     )
-    logging.debug(dataframe.head(5))
-    return dataframe
+    df = df[df["batch_number"] == batch_number]
+    logging.debug(df.head(5))
+    return df
 
 
 def run_colabfold_script(
-    dataset_path, lower, upper, msa_dir, colabfold_script_path
+    dataset_path, batch_number, msa_dir, colabfold_script_path
 ) -> None:
     """Run the colabfold script for each observation."""
-    df = create_observations(dataset_path, lower, upper)
+    df = create_observations(dataset_path, batch_number)
     logging.debug("Preparing MSAs for ColabFold call...")
     df["file"] = df["symbol"].apply(lambda symbol: prep_msas(symbol, msa_dir))
     logging.debug(df.head(5))
-    df["file"].apply(
-        lambda file_name: subprocess.call([colabfold_script_path, file_name])
-    )
+    files = df["file"].to_list()
+    input_path = os.path.join(msa_dir, str(batch_number))
+    os.makedirs(input_path, exist_ok=True)
+    for msa_file in files:
+        shutil.move(os.path.join(msa_dir, msa_file), input_path)
+    subprocess.run(["sbatch", colabfold_script_path, input_path, str(batch_number)])
 
 
 def parse_command_line():  # pragma: no cover
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "-b",
-        "--lower_bound",
+        "batch_number",
         type=int,
-        default=0,
-        help="Which observation the program should start running ColabFold on (default: 0)",
-    )
-    parser.add_argument(
-        "-u",
-        "--upper_bound",
-        type=int,
-        default=10000,
-        help="Which observation the program should finish running ColabFold on (default: 10,000)",
+        help="Which batch number ColabFold should run on",
     )
     parser.add_argument(
         "-d",
@@ -94,11 +94,11 @@ def parse_command_line():  # pragma: no cover
         "-m",
         "--msa_dir",
         type=str,
-        default="/cluster/projects/kumargroup/jackson/msas/",
+        default="/cluster/projects/kumargroup/jackson/msas",
         help="The path to the MSA files",
     )
     parser.add_argument(
-        "-c", "--colabfold_path", type=str, default="./run_colabfold.sh"
+        "-c", "--colabfold_path", type=str, default="./jobs/run_colabfold.sh"
     )
     parser.add_argument(
         "-v",
@@ -144,8 +144,7 @@ def main():  # pragma: no cover
     logging.info("Running colabfold script...")
     run_colabfold_script(
         args.dataset_path,
-        args.lower_bound,
-        args.upper_bound,
+        args.batch_number,
         args.msa_dir,
         args.colabfold_path,
     )
