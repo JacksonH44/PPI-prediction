@@ -20,7 +20,7 @@ def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
     logging.debug(f'{symbol} - best model: {best_model} pLDDT: {plddt} ipTM: {iptm}')
     with open(stats_file, 'a') as stats:
         writer = csv.writer(stats)
-        writer.writerow([symbol, plddt, iptm, best_model, finished])
+        writer.writerow([symbol, best_model, plddt, iptm])
 
 
 def collect_symbols(data_dir: str) -> list[str]:
@@ -108,7 +108,7 @@ def parse_command_line():  # pragma : no cover
     args = parser.parse_args()
     return args
 
-def main():
+def main():  # pragma: no cover
     """Run the command line program."""
     args = parse_command_line()
     logfile = (
@@ -125,5 +125,5 @@ def main():
     collect_stats(args.data_directory, args.stats_file)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -12,9 +12,11 @@ from src.features.run_colabfold import create_observations, find_msa, prep_msas
 def test_create_observations_success():
     """Test that creating a dataframe with the
     required bounds works correctly."""
-    data = {"symbol": ["ABI1_ENAH", "HIF1A_FGF11"], "length": [1051, 1051]}
+    data = {"symbol": ["TMA7", "NOP10", "SERP1", "FXYD2"], "length": [64, 64, 66, 66], "batch_number": [2, 2, 2, 2]}
     expected_result = pd.DataFrame(data=data)
-    actual_result = create_observations("data/interim/sequence_lengths.csv", 6979, 6980)
+    actual_result = create_observations("data/interim/sequence_lengths.csv", 2)
+    actual_result = actual_result.reset_index(drop=True)
+    expected_result = expected_result.reset_index(drop=True)
     assert expected_result.equals(actual_result)
 
 
