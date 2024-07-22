@@ -111,6 +111,21 @@ files = [
 frozenlist = ">=1.1.0"
 
 [[package]]
+name = "astunparse"
+version = "1.6.3"
+description = "An AST unparser for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "astunparse-1.6.3-py2.py3-none-any.whl", hash = "sha256:c2652417f2c8b5bb325c885ae329bdf3f86424075c4fd1a128674bc6fba4b8e8"},
+    {file = "astunparse-1.6.3.tar.gz", hash = "sha256:5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872"},
+]
+
+[package.dependencies]
+six = ">=1.6.1,<2.0"
+wheel = ">=0.23.0,<1.0"
+
+[[package]]
 name = "async-timeout"
 version = "4.0.3"
 description = "Timeout context manager for asyncio programs"
@@ -1370,13 +1385,23 @@ files = [
 
 [[package]]
 name = "mdtraj"
-version = "1.9.1"
+version = "1.9.5"
 description = "MDTraj: A modern, open library for the analysis of molecular dynamics trajectories"
 optional = false
 python-versions = "*"
 files = [
-    {file = "mdtraj-1.9.1.tar.gz", hash = "sha256:ca1ae07c5f5ce59940a48388ac9b098f8e22743b5f3ed3f46d5e3d1317b06282"},
+    {file = "mdtraj-1.9.5-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:c02a9a589acc98dd3cc4db9b0cb21725f5e2cb9484c14cc4fa032a4663c7a1e9"},
+    {file = "mdtraj-1.9.5-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:8816f9a91826e46a413fd1a5ffd663b4076cf4c3b8930bb2046814d1438a88ee"},
+    {file = "mdtraj-1.9.5-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:84bb3ced0ff61c4b3b38a36d71837599f50c8723c5d9e555dced51d0d09e10a1"},
+    {file = "mdtraj-1.9.5-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:7eae1adc6aa876396c9797d80db3f71da831601fb1739da731e1de9ca8ac96ab"},
+    {file = "mdtraj-1.9.5.tar.gz", hash = "sha256:f22c28c9dd51aa0f8692078dd3c2c7a338a7ca27cbd9aaeb669a60361e95adc4"},
 ]
+
+[package.dependencies]
+astunparse = "*"
+numpy = ">=1.6"
+pyparsing = "*"
+scipy = "*"
 
 [[package]]
 name = "multidict"
@@ -2348,6 +2373,20 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "wheel"
+version = "0.43.0"
+description = "A built-package format for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "wheel-0.43.0-py3-none-any.whl", hash = "sha256:55c570405f142630c6b9f72fe09d9b67cf1477fcf543ae5b8dcb1f5b7377da81"},
+    {file = "wheel-0.43.0.tar.gz", hash = "sha256:465ef92c69fa5c5da2d1cf8ac40559a8c940886afcef87dcf14b9470862f1d85"},
+]
+
+[package.extras]
+test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
+
+[[package]]
 name = "yarl"
 version = "1.9.4"
 description = "Yet another URL library"
@@ -2468,4 +2507,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "b0ec676d15288c382df115720503ccef1c16ce3929d9e5374051764a5fef270e"
+content-hash = "a8488eb6e7a72473264dc0d5b6ec2c1096cf2fa096eb0981bc5a92d0cef3d63d"
