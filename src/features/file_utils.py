@@ -4,6 +4,7 @@ used when generating features from ColabFold complex
 representations.
 """
 
+import re
 import os
 
 
@@ -17,7 +18,7 @@ def find_all_complexes(batch_path: str) -> list[str]:
     batch_path : str
         The path to the batch directory holding the complex
         predictions you wish to extract
-    
+
     Returns
     -------
     complexes : list[str]
@@ -36,7 +37,7 @@ def find_all_complexes(batch_path: str) -> list[str]:
 
 def find_pdb_files(batch_path: str, stats_file: str) -> list[str]:
     """
-    Crawl through a batch directory and return the PDB file 
+    Crawl through a batch directory and return the PDB file
     that corresponds to the best model predicted by ColabFold.
 
     Parameters
@@ -47,7 +48,7 @@ def find_pdb_files(batch_path: str, stats_file: str) -> list[str]:
     stats_file : str
         The path to the stats file that shows, for each complex,
         the number of the predicted model that is most confident
-    
+
     Returns
     -------
     pdb_list : list[str]
@@ -56,3 +57,10 @@ def find_pdb_files(batch_path: str, stats_file: str) -> list[str]:
         predicted by ColabFold
     """
     pdb_list = []
+    complex_symbols = find_all_complexes(batch_path)
+    for symbol in complex_symbols:
+        pattern = rf"^{symbol}.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
+        pdb_list.append(
+            [file for file in os.listdir(batch_path) if re.match(pattern, file)][0]
+        )
+    return pdb_list

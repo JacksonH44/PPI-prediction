@@ -8,10 +8,12 @@ import argparse
 import csv
 import logging
 import os
+import sys
 
 import pandas as pd
 
-from file_utils import find_all_complexes
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+from src.features.file_utils import find_all_complexes
 
 
 def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
