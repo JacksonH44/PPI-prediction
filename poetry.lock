@@ -1385,27 +1385,18 @@ files = [
 
 [[package]]
 name = "mdtraj"
-version = "1.10.0"
+version = "1.9.9"
 description = "MDTraj: A modern, open library for the analysis of molecular dynamics trajectories"
 optional = false
 python-versions = "*"
 files = [
-    {file = "mdtraj-1.10.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b55a927f115781c2a79f66b82098d8905925628176fc934720cd6e54d571569a"},
-    {file = "mdtraj-1.10.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5cf5041232d2450e1198d41bb01448590d8a020d89e113841daa53f328fd61ce"},
-    {file = "mdtraj-1.10.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7d43672dcae328aaf28ce2e15a9af67c1430892bb9f24137bf3abd7abd51e503"},
-    {file = "mdtraj-1.10.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:0cbd9f3bee7e9f26679cddeb7a563445a5ffbb1b4620ffd2ed5cd225fe5f2050"},
-    {file = "mdtraj-1.10.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:594af79623c2ed7b48e54d88477063723b4e2c115efde8e7283a5942f77eb291"},
-    {file = "mdtraj-1.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:28b4011dff22fcdfe1275dbca8924516d00a6dff193bb1226738d9f7feeb862a"},
-    {file = "mdtraj-1.10.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:1faac41efbe734ef4f9fb76754c798778ab648873b17888c55c89dd17b61bc8e"},
-    {file = "mdtraj-1.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f9a56bfa59fa0a3a0ba9e788acde3299285f58894994897e137405b0fe43f7ae"},
-    {file = "mdtraj-1.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:750ab3ff2c5ea5591f907b170d9791d303564d3375077e453c69bad842d73bf5"},
-    {file = "mdtraj-1.10.0.tar.gz", hash = "sha256:7d518b5a53b498f52686567e0191e9ee41a725b3296a8dbcac24fe824ed4af8f"},
+    {file = "mdtraj-1.9.9-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c36b307b7b8a999af4301122e03a6fdf7c11eb248a6dca2341ab64adb1c94a19"},
+    {file = "mdtraj-1.9.9.tar.gz", hash = "sha256:1b03f7ac753af5ca07cf874842689c8d49e791ee1242510875581df6100ca15e"},
 ]
 
 [package.dependencies]
 astunparse = "*"
-numpy = ">=1.23,<2.0.0a0"
-packaging = "*"
+numpy = ">=1.6"
 pyparsing = "*"
 scipy = "*"
 
@@ -2504,4 +2495,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "497def0a644eb1517d3c97453fb45518e615be0a096ace3aa5bee21370ef3cfa"
+content-hash = "539c743dd726b58c822aeb211456431e7c7549a610dbe8546981ced4e744041d"
