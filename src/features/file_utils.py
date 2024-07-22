@@ -35,7 +35,7 @@ def find_all_complexes(batch_path: str) -> list[str]:
     return complexes
 
 
-def find_pdb_files(batch_path: str, stats_file: str) -> list[str]:
+def find_pdb_files(batch_path: str) -> list[str]:
     """
     Crawl through a batch directory and return the PDB file
     that corresponds to the best model predicted by ColabFold.
@@ -45,9 +45,6 @@ def find_pdb_files(batch_path: str, stats_file: str) -> list[str]:
     batch_path : str
         The path to the batch directory you wish to extract
         PDB files from
-    stats_file : str
-        The path to the stats file that shows, for each complex,
-        the number of the predicted model that is most confident
 
     Returns
     -------

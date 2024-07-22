@@ -27,6 +27,8 @@ python-calamine = ">=0.2.0"
 requests = ">=2.32.3"
 types-boto3 = ">=1.0.2"
 matplotlib = "^3.9.1"
+mdtraj = "^1.10.0"
+contact-map = "^0.7.0"
 
 [tool.poetry.group.test]
 optional = true

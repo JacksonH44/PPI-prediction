@@ -21,11 +21,7 @@ def test_find_pdb_files_success():
             "CDKN2A_CYCS.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_5_seed_000.pdb",
         ]
     )
-    actual_result = set(
-        find_pdb_files(
-            "tests/test_data/colabfold/0", "tests/test_data/colabfold_stats_test.csv"
-        )
-    )
+    actual_result = set(find_pdb_files("tests/test_data/colabfold/0"))
     print(actual_result)
     assert actual_result == expected_result
 
