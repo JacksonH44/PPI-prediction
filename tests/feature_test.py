@@ -7,6 +7,33 @@ import pytest
 import pandas as pd
 
 from src.features.run_colabfold import create_observations, find_msa, prep_msas
+from src.features.file_utils import find_all_complexes, find_pdb_files
+
+
+def test_find_pdb_files_success():
+    """Test that find_pdb_files finds all the
+    correct PDB files corresponding to the best models."""
+    expected_result = set(
+        [
+            "CDKN2A_TRAPPC2L.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_2_seed_000.pdb",
+            "CDKN2C_CD24.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb",
+            "SRSF3_GGTA1.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb",
+            "CDKN2A_CYCS.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_5_seed_000.pdb",
+        ]
+    )
+    actual_result = set(find_pdb_files("tests/test_data/colabfold/0"))
+    print(actual_result)
+    assert actual_result == expected_result
+
+
+def test_find_all_complexes_success():
+    """Test that finding complexes within a batch
+    is correct."""
+    expected_result = set(
+        ["CDKN2A_TRAPPC2L", "CDKN2C_CD24", "SRSF3_GGTA1", "CDKN2A_CYCS"]
+    )
+    actual_result = set(find_all_complexes("tests/test_data/colabfold/0"))
+    assert actual_result == expected_result
 
 
 def test_create_observations_success():
