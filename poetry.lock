@@ -1385,16 +1385,13 @@ files = [
 
 [[package]]
 name = "mdtraj"
-version = "1.9.5"
+version = "1.9.9"
 description = "MDTraj: A modern, open library for the analysis of molecular dynamics trajectories"
 optional = false
 python-versions = "*"
 files = [
-    {file = "mdtraj-1.9.5-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:c02a9a589acc98dd3cc4db9b0cb21725f5e2cb9484c14cc4fa032a4663c7a1e9"},
-    {file = "mdtraj-1.9.5-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:8816f9a91826e46a413fd1a5ffd663b4076cf4c3b8930bb2046814d1438a88ee"},
-    {file = "mdtraj-1.9.5-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:84bb3ced0ff61c4b3b38a36d71837599f50c8723c5d9e555dced51d0d09e10a1"},
-    {file = "mdtraj-1.9.5-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:7eae1adc6aa876396c9797d80db3f71da831601fb1739da731e1de9ca8ac96ab"},
-    {file = "mdtraj-1.9.5.tar.gz", hash = "sha256:f22c28c9dd51aa0f8692078dd3c2c7a338a7ca27cbd9aaeb669a60361e95adc4"},
+    {file = "mdtraj-1.9.9-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c36b307b7b8a999af4301122e03a6fdf7c11eb248a6dca2341ab64adb1c94a19"},
+    {file = "mdtraj-1.9.9.tar.gz", hash = "sha256:1b03f7ac753af5ca07cf874842689c8d49e791ee1242510875581df6100ca15e"},
 ]
 
 [package.dependencies]
@@ -2507,4 +2504,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.13"
-content-hash = "a8488eb6e7a72473264dc0d5b6ec2c1096cf2fa096eb0981bc5a92d0cef3d63d"
+content-hash = "539c743dd726b58c822aeb211456431e7c7549a610dbe8546981ced4e744041d"
