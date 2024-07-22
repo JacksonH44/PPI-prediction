@@ -11,6 +11,8 @@ import os
 
 import pandas as pd
 
+from file_utils import find_all_complexes
+
 
 def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
     """Write stats to the stats output file."""
@@ -21,19 +23,6 @@ def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
     with open(stats_file, "a") as stats:
         writer = csv.writer(stats)
         writer.writerow([symbol, best_model, plddt, iptm])
-
-
-def collect_symbols(data_dir: str) -> list[str]:
-    """Crawl the data directory and return all symbols
-    that ColabFold ran on."""
-    omit = set(["cite.bibtex", "config.json", "log.txt"])
-    symbol_set = set()
-    for file in os.listdir(data_dir):
-        name = file.split(".")[0]
-        if file not in omit:
-            symbol_set.add(name)
-
-    return list(symbol_set)
 
 
 def collect_stats(data_dir: str, stats_file: str):
@@ -50,13 +39,13 @@ def collect_stats(data_dir: str, stats_file: str):
         file with headers symbol,plddt,iptm,best_model
     """
     if os.path.exists(stats_file):
-        symbols_needed = collect_symbols(data_dir)
+        symbols_needed = find_all_complexes(data_dir)
         symbols_computed = pd.read_csv(stats_file, usecols=["symbol"])[
             "symbol"
         ].to_list()
         symbols = list(set(symbols_needed) - set(symbols_computed))
     else:
-        symbols = collect_symbols(data_dir)
+        symbols = find_all_complexes(data_dir)
         with open(stats_file, "w") as stats:
             writer = csv.writer(stats)
             writer.writerow(["symbol", "best_model", "pLDDT", "ipTM"])
