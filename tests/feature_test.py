@@ -8,7 +8,27 @@ import pandas as pd
 
 from src.features.run_colabfold import create_observations, find_msa, prep_msas
 from src.features.file_utils import find_all_complexes, find_pdb_files
-from src.features.surface_area import find_interaction_site, find_length_split
+from src.features.surface_area import (
+    find_interaction_site,
+    find_length_split,
+    calculate_sa_metrics,
+)
+
+
+def test_calculate_sa_metrics_fail():
+    """Test that the function correctly throws an error when two residue lists
+    are not the same length."""
+    with pytest.raises(AssertionError):
+        calculate_sa_metrics([3.23423, 4.2342], [8.23432])
+
+
+def test_calculate_sa_metrics_success():
+    """Test that the function correctly calculates the surface area metrics."""
+    expected_result = (-0.9901, 7.106, -8.0947)
+    actual_result = calculate_sa_metrics(
+        [3.324, 8.3289, 2.234], [1.3425, 0.23423, 9.34]
+    )
+    assert expected_result == actual_result
 
 
 def test_find_interaction_site():

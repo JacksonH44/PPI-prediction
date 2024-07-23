@@ -19,6 +19,39 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_pdb_files
 
 
+def calculate_sa_metrics(
+    monomer_residues: list[float], multimer_residues: list[float]
+) -> tuple[float, float, float]:
+    """
+    Return the average, minimum, and maximum change in surface area (SA) between
+    two sets of residues
+
+    Parameters
+    ----------
+    monomer_residues : list[float]
+        The SAs for the residues when they are in monomer form
+    multimer_residues : list[float]
+        The SAs for the residues when they are in multimer form
+
+    Returns
+    -------
+    metrics : tuple[float, float, float]
+        A triple of average change in SA, max change in SA, and min change in SA
+    """
+    # Check residues are the same length
+    assert len(monomer_residues) == len(multimer_residues)
+    deltas = []
+    n = len(monomer_residues)
+    for i in range(n):
+        # Subtract monomer from multimer so positive delta
+        # represents an increase in SA, and negative represents decrease
+        deltas.append(multimer_residues[i] - monomer_residues[i])
+    avg = round(sum(deltas) / n, 4)
+    d_max = round(max(deltas), 4)
+    d_min = round(min(deltas), 4)
+    return (avg, d_max, d_min)
+
+
 def calculate_surface_areas(pdb_path: str):
     """
     Calculates surface areas for each residue of a structure in a PDB file
