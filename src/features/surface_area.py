@@ -9,6 +9,7 @@ import os
 import sys
 from typing import Optional
 
+from Bio.PDB import PDBParser, SASA  # type: ignore
 from contact_map import ContactFrequency  # type: ignore
 import mdtraj as md  # type: ignore
 import pandas as pd
@@ -16,6 +17,29 @@ import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_pdb_files
+
+
+def calculate_surface_areas(pdb_path: str):
+    """
+    Calculates surface areas for each residue of a structure in a PDB file
+
+    Parameters
+    ----------
+    pdb_path : str
+        The path to the PDB file you want to calculate surface areas of
+
+    Returns
+    -------
+    sr : Structure
+        A structure object representing the residue-level computed surface areas
+        for the PDB file
+    """
+    p = PDBParser(QUIET=1)
+    symbol = pdb_path.split("/")[-1].split(".")[0]
+    struct = p.get_structure(symbol, pdb_path)
+    sr = SASA.ShrakeRupley()
+    sr.compute(struct, level="R")
+    return struct
 
 
 def find_interaction_site(
@@ -115,16 +139,15 @@ def find_delta_surface_areas(batch_dir: str) -> None:
         symbol = file.split("/")[-1].split(".")[0]
         split = find_length_split(symbol, batch_dir)
         if split:
+            file_path = os.path.join(batch_dir, file)
             seq_length_1, seq_length_2 = split[0], split[1]
-            logging.debug(f"Sequence lengths for complex {symbol}:")
-            logging.debug(
-                f"{symbol.split('_')[0]}: {seq_length_1}\n{symbol.split('_')[1]}: {seq_length_2}"
-            )
-            cmap_df = get_contact_map(f"{batch_dir}/{file}")
+            cmap_df = get_contact_map(file_path)
             mask_map = find_interaction_site(
                 symbol, cmap_df, seq_length_1, seq_length_2
             )
             logging.debug(mask_map)
+            surface_areas = calculate_surface_areas(file_path)
+            logging.debug(surface_areas)
 
 
 def parse_command_line():  # pragma: no cover
