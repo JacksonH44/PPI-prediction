@@ -8,6 +8,21 @@ import pandas as pd
 
 from src.features.run_colabfold import create_observations, find_msa, prep_msas
 from src.features.file_utils import find_all_complexes, find_pdb_files
+from src.features.surface_area import find_length_split
+
+
+def test_find_length_split_fail():
+    """Test that when a symbol doesn't exist the error is handled elegantly."""
+    expected_result = None
+    actual_result = find_length_split('FANCE_FANCF', 'tests/test_data/colabfold/0')
+    assert expected_result == actual_result
+
+
+def test_find_length_split_success():
+    """Verify that lengths are found accurately for complexes."""
+    expected_result = (164, 100)
+    actual_result = find_length_split('SRSF3_GGTA1', 'tests/test_data/colabfold/0')
+    assert actual_result == expected_result
 
 
 def test_find_pdb_files_success():

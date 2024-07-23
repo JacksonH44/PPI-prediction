@@ -4,6 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ppi-prediction"
+package-mode = false
 version = "0.1.0"
 description = "A python library for predicting protein-protein interactions"
 authors = ["Jackson Howe <j2howe@uwaterloo.ca>"]
