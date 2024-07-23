@@ -18,6 +18,60 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_pdb_files
 
 
+def find_interaction_site(
+    complex_symbol: str,
+    contact_map_df: pd.DataFrame,
+    seq_length_1: int,
+    seq_length_2: int,
+) -> dict[str, list[bool]]:
+    """
+    Find the interaction sites for the two proteins present in the complex. It considers
+    cases where one residue in the contact map is on one protein, while the other residue
+    is on the other protein. Indices returned in the mask are relative to the single protein
+    (e.g. if an interacting residue is residue #214 in the complex but #89 in the single
+    protein, the number 89 will be returned).
+
+    Parameters
+    ----------
+    complex_symbol : str
+        The name of the complex to find interaction sites for
+    contact_map_df : pd.DataFrame
+        A pandas dataframe with column 1 being the first residue index of interaction,
+        column 2 being the second residue index of interaction
+    seq_length_1 : int
+        The length of the first protein
+    seq_length_2 : int
+        The length of the second protein
+
+    Returns
+    -------
+    mask_map : dict[str, list[bool]]
+        A two-element hashmap that contains symbol name, interaction site mask pairs
+        where the interaction site mask is a list of booleans with the same length as
+        the symbol sequence. Values are true for residues that are part of the
+        interaction site, and false for those that aren't.
+    """
+    protein_1, protein_2 = complex_symbol.split("_")[0], complex_symbol.split("_")[1]
+    mask_1 = [False] * seq_length_1
+    mask_2 = [False] * seq_length_2
+    for row in contact_map_df.itertuples(index=False):
+        residue_1, residue_2 = row[0], row[1]
+        # NOTE: Indices of the masks are one less than the residues because
+        # residues are 1-indexed and masks are 0-indexed
+        # residue 1 is on protein 1 and residue 2 on protein 2
+        if residue_1 <= seq_length_1 and residue_2 > seq_length_1:
+            mask_1[residue_1 - 1] = True
+            mask_2[residue_2 - seq_length_1 - 1] = True
+        # residue 1 is on protein 2 and residue 2 on protein 1
+        if residue_1 > seq_length_1 and residue_2 <= seq_length_1:
+            mask_2[residue_1 - seq_length_1 - 1] = True
+            mask_1[residue_2 - 1] = True
+    mask_map = {}
+    mask_map[protein_1] = mask_1
+    mask_map[protein_2] = mask_2
+    return mask_map
+
+
 def find_length_split(symbol_name: str, batch_dir: str) -> Optional[tuple[int, int]]:
     """Find the sequence lengths for the two proteins in a protein
     complex."""
@@ -49,7 +103,8 @@ def get_contact_map(pdb_file: str) -> pd.DataFrame:
     df["residue2"] += 1
 
     df = df.loc[df.residue1.ne(df.residue2)]  # keep non-self rows
-    return df
+    df = df[df["weight"] == 1.0]
+    return df[["residue1", "residue2"]]
 
 
 def find_delta_surface_areas(batch_dir: str) -> None:
@@ -65,6 +120,11 @@ def find_delta_surface_areas(batch_dir: str) -> None:
             logging.debug(
                 f"{symbol.split('_')[0]}: {seq_length_1}\n{symbol.split('_')[1]}: {seq_length_2}"
             )
+            cmap_df = get_contact_map(f"{batch_dir}/{file}")
+            mask_map = find_interaction_site(
+                symbol, cmap_df, seq_length_1, seq_length_2
+            )
+            logging.debug(mask_map)
 
 
 def parse_command_line():  # pragma: no cover
