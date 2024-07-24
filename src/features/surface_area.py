@@ -52,6 +52,35 @@ def calculate_sa_metrics(
     return (avg, d_max, d_min)
 
 
+def split_residues_from_mask():
+    """
+    Get a list of residues and a mask as input, and return two lists of residues -
+    one for the interaction site, and one for the non-interaction site
+    """
+    # TODO: finish function
+
+
+def extract_residues(chain) -> list[float]:
+    """
+    Return a list with the same length as the input sequence of surface areas,
+    one entry for each sequence. The model index and chain should already be specified
+    (e.g. usage: extract_residues(struct[0]['A']))
+
+    Parameters
+    ----------
+    chain : Chain
+        The input chain for which to extract residue-level surface area calculations from
+
+    Returns
+    -------
+    surface_areas : list[float]
+        A list of surface areas the same length as the number of residues in the chain rounded
+        to 4 significant digits
+    """
+    surface_areas = [round(chain[i].sasa, 4) for i in range(1, len(chain) + 1)]
+    return surface_areas
+
+
 def calculate_surface_areas(pdb_path: str):
     """
     Calculates surface areas for each residue of a structure in a PDB file
@@ -174,13 +203,22 @@ def find_delta_surface_areas(batch_dir: str) -> None:
         if split:
             file_path = os.path.join(batch_dir, file)
             seq_length_1, seq_length_2 = split[0], split[1]
+            logging.debug(f"Generating contact map for {symbol}...")
             cmap_df = get_contact_map(file_path)
+            logging.debug(f"Finding interaction site for {symbol}...")
             mask_map = find_interaction_site(
                 symbol, cmap_df, seq_length_1, seq_length_2
             )
-            logging.debug(mask_map)
-            surface_areas = calculate_surface_areas(file_path)
-            logging.debug(surface_areas)
+            logging.debug(f"Calculating surface area structure for {symbol}...")
+            struct = calculate_surface_areas(file_path)
+            logging.debug(
+                f'Extracting residue-level surface area for {symbol.split("_")[0]}...'
+            )
+            chain_a_sa = extract_residues(struct[0]["A"])
+            logging.debug(
+                f'Extracting residue-level surface area for {symbol.split("_")[1]}...'
+            )
+            chain_b_sa = extract_residues(struct[0]["B"])
 
 
 def parse_command_line():  # pragma: no cover
