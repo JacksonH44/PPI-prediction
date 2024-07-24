@@ -52,12 +52,29 @@ def calculate_sa_metrics(
     return (avg, d_max, d_min)
 
 
-def split_residues_from_mask():
+def apply_residue_mask(residue_sas: list[float], mask: list[bool]) -> tuple[int, int]:
     """
     Get a list of residues and a mask as input, and return two lists of residues -
     one for the interaction site, and one for the non-interaction site
+
+    Parameters
+    ----------
+    residue_sas : list[float]
+        List of all residue surface areas for a sequence
+    mask : list[bool]
+        Interaction site mask for the sequence
+
+    Returns
+    -------
+    tuple[int, int]
+        A tuple of residue-level surface areas in the order (interaction_site, non_interaction_site)
     """
-    # TODO: finish function
+    assert len(residue_sas) == len(mask)
+    interaction_site = [residue_sas[i] for i in range(len(residue_sas)) if mask[i]]
+    non_interaction_site = [
+        residue_sas[i] for i in range(len(residue_sas)) if not mask[i]
+    ]
+    return (interaction_site, non_interaction_site)
 
 
 def extract_residues(chain) -> list[float]:
@@ -211,14 +228,19 @@ def find_delta_surface_areas(batch_dir: str) -> None:
             )
             logging.debug(f"Calculating surface area structure for {symbol}...")
             struct = calculate_surface_areas(file_path)
-            logging.debug(
-                f'Extracting residue-level surface area for {symbol.split("_")[0]}...'
-            )
-            chain_a_sa = extract_residues(struct[0]["A"])
-            logging.debug(
-                f'Extracting residue-level surface area for {symbol.split("_")[1]}...'
-            )
-            chain_b_sa = extract_residues(struct[0]["B"])
+            for i in [0, 1]:
+                sym = symbol.split("_")[i]
+                logging.debug(f"Extracting residue-level surface area for {sym}...")
+                chain_sa = extract_residues(struct[0]["A" if i == 0 else "B"])
+                logging.debug(
+                    f"Splitting surface areas into interaction and non-interaction for {sym}..."
+                )
+                interaction, non_interaction = apply_residue_mask(
+                    chain_sa, mask_map[sym]
+                )
+                logging.debug(
+                    f"Interaction: {interaction}\nNon-interaction: {non_interaction}"
+                )
 
 
 def parse_command_line():  # pragma: no cover

@@ -9,10 +9,28 @@ import pandas as pd
 from src.features.run_colabfold import create_observations, find_msa, prep_msas
 from src.features.file_utils import find_all_complexes, find_pdb_files
 from src.features.surface_area import (
+    apply_residue_mask,
     find_interaction_site,
     find_length_split,
     calculate_sa_metrics,
 )
+
+
+def test_apply_residue_mask_fail():
+    """Test that an AssertionError is raised when the length of the surface
+    areas is not equal to the length of the mask provided."""
+    with pytest.raises(AssertionError):
+        apply_residue_mask([4.7823, 1.1008, 0.8923, 2.1129], [True, False, False])
+
+
+def test_apply_residue_mask_success():
+    """Test that a tuple of interaction site surface areas and non-interaction site
+    surface areas is correctly returned."""
+    expected_result = ([4.7823, 2.1129], [1.1008, 0.8923])
+    actual_result = apply_residue_mask(
+        [4.7823, 1.1008, 0.8923, 2.1129], [True, False, False, True]
+    )
+    assert expected_result == actual_result
 
 
 def test_calculate_sa_metrics_fail():
