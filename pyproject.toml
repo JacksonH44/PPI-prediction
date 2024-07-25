@@ -13,13 +13,13 @@ readme = "README.rst"
 repository = "https://github.com/JacksonH44/PPI-prediction"
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.13"
+python = ">=3.10, <3.13"
 aiohttp = ">=3.9.5"
 boto3 = ">=1.34.131"
 contact-map = "^0.7.0"
