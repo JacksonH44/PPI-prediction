@@ -50,7 +50,21 @@ def test_get_colabfold_metrics_success():
         lines = log.readlines()
         lines = [line.split(" ", maxsplit=2)[2] for line in lines]
         lines = [line.rstrip("\n") for line in lines]
-        expected_result = ["79.5", "0.501"]
+        expected_result = [
+            "2",
+            "79.5",
+            "76.18",
+            "79.5",
+            "73.4",
+            "0.501",
+            "0.4894",
+            "0.501",
+            "0.476",
+            "0.174",
+            "0.1518",
+            "0.174",
+            "0.123",
+        ]
         actual_result = get_colabfold_metrics("CDKN2A_TRAPPC2L", lines)
         assert expected_result == actual_result
 

@@ -16,6 +16,20 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_all_complexes
 
 
+def _extract_metrics_from_line(line: str) -> tuple[float, float, float]:  # pragma: no cover
+    """
+    Take a line of the form:
+
+    rank_001_alphafold2_multimer_v3_model_4_seed_000 pLDDT=70.2 pTM=0.663 ipTM=0.135
+
+    and return pLDDT, pTM, and ipTM
+    """
+    plddt = line.split(" ")[1].split("=")[1]
+    ptm = line.split(" ")[2].split("=")[1]
+    iptm = line.split(" ")[3].split("=")[1]
+    return float(plddt), float(ptm), float(iptm)
+
+
 def get_colabfold_metrics(symbol: str, lines: list[str]) -> list[str]:
     """
     Return the best model, pLDDT score, and ipTM score from the ColabFold log
@@ -31,20 +45,67 @@ def get_colabfold_metrics(symbol: str, lines: list[str]) -> list[str]:
     Returns
     -------
     list[str]
-        A 2 element list consisting of [plddt, iptm] representing
-        features for the complex
+        A 13 element list representing the best model (first element in list)
+        and 12 features: best model, average, max, and min for each of pLDDT,
+        pTM, and ipTM.
     """
+    # Find the start and the end of the log file for this symbol
+    # Line should say something like 'Query 1/4 CDKN2C_CD24.msa (length 248)'
     query_start = [line for line in lines if symbol in line][0]
     query_start_index = lines.index(query_start)
-    multimer_string = "reranking models by 'multimer' metric"
-    if multimer_string in lines[query_start_index:]:
-        idx = lines.index("reranking models by 'multimer' metric", query_start_index)
-        line = lines[idx + 1]
-        plddt = line.split(" ")[1].split("=")[1]
-        iptm = line.split(" ")[2].split("=")[1]
-        logging.debug(f"{symbol} - pLDDT: {plddt} ipTM: {iptm}")
-        return [plddt, iptm]
-    return ['NA', 'NA']
+    query_end = [
+        lines[i]
+        for i in range(query_start_index + 1, len(lines))
+        if "Query" in lines[i] or "Done" in lines[i]
+    ][0]
+    query_end_index = lines.index(query_end)
+    lines = lines[query_start_index:query_end_index]
+    stats_lines = lines[-5:]
+    best_model = stats_lines[0].split(" ")[0].split("_")[6]
+    best_model_plddt, best_model_ptm, best_model_iptm = _extract_metrics_from_line(
+        stats_lines[0]
+    )
+    plddt_total = 0.0
+    ptm_total = 0.0
+    iptm_total = 0.0
+    max_plddt = 0.0
+    min_plddt = 100.0
+    max_ptm = 0.0
+    min_ptm = 1.0
+    max_iptm = 0.0
+    min_iptm = 1.0
+    for line in stats_lines:
+        plddt, ptm, iptm = _extract_metrics_from_line(line)
+        plddt_total += plddt
+        max_plddt = max(max_plddt, plddt)
+        min_plddt = min(min_plddt, plddt)
+        ptm_total += ptm
+        max_ptm = max(max_ptm, ptm)
+        min_ptm = min(min_ptm, ptm)
+        iptm_total += iptm
+        max_iptm = max(max_iptm, iptm)
+        min_iptm = min(min_iptm, iptm)
+    mean_plddt = round(plddt_total / 5, 4)
+    mean_ptm = round(ptm_total / 5, 4)
+    mean_iptm = round(iptm_total / 5, 4)
+
+    features = [
+        best_model,
+        best_model_plddt,
+        mean_plddt,
+        max_plddt,
+        min_plddt,
+        best_model_ptm,
+        mean_ptm,
+        max_ptm,
+        min_ptm,
+        best_model_iptm,
+        mean_iptm,
+        max_iptm,
+        min_iptm,
+    ]
+    features_str = [str(feat) for feat in features]
+    return features_str
 
 
 def collect_stats(data_dir: str, stats_file: str):
@@ -70,7 +131,23 @@ def collect_stats(data_dir: str, stats_file: str):
         symbols = find_all_complexes(data_dir)
         with open(stats_file, "w") as stats:
             writer = csv.writer(stats)
-            writer.writerow(["symbol", "pLDDT", "ipTM"])
+            header = [
+                "symbol",
+                "best_model",
+                "best_model_plddt",
+                "mean_plddt",
+                "max_plddt",
+                "min_plddt",
+                "best_model_ptm",
+                "mean_ptm",
+                "max_ptm",
+                "min_ptm",
+                "best_model_iptm",
+                "mean_iptm",
+                "max_iptm",
+                "min_iptm",
+            ]
+            writer.writerow(header)
     logfile = os.path.join(data_dir, "log.txt")
     with open(logfile, "r") as log:
         lines = log.readlines()
