@@ -31,16 +31,24 @@ jobs:
             run: |
                 python -m pip install --upgrade pip
                 pip install pipx
+                pipx ensurepath
                 pipx install poetry
+                python3 -m venv .venv
+                source .venv/bin/activate
                 poetry install --no-interaction --with test
                 poetry install --no-interaction --with dev
             
           - name: Test with pytest
-            run: poetry run pytest
+            run: |
+              source .venv/bin/activate
+              poetry run pytest
           - name: Type check with mypy
-            run: poetry run mypy
+            run: |
+              source .venv/bin/activate
+              poetry run mypy
           - name: Lint with flake8
             run: |
+                source .venv/bin/activate
                 poetry run flake8 src/data/*
                 poetry run flake8 src/features/*
                 poetry run flake8 tests
