@@ -210,11 +210,13 @@ def get_contact_map(pdb_file: str) -> pd.DataFrame:
     return df[["residue1", "residue2"]]
 
 
-def find_delta_surface_areas(batch_dir: str) -> None:
+def find_delta_surface_areas(batch_dir: str, monomer_dir: str) -> None:
     """Find the change in surface area for the interaction
     and non-interaction sites for a batch of ColabFold outputs."""
-    pdb_files = find_pdb_files(batch_dir)
-    for file in pdb_files:
+    multimer_pdb_files = find_pdb_files(batch_dir)
+    monomers = os.listdir(monomer_dir)
+    monomer_pdb_files = [pdb_file for m in monomers for pdb_file in find_pdb_files(os.path.join(monomer_dir, m))]
+    for file in multimer_pdb_files:
         symbol = file.split("/")[-1].split(".")[0]
         split = find_length_split(symbol, batch_dir)
         if split:
@@ -227,20 +229,30 @@ def find_delta_surface_areas(batch_dir: str) -> None:
                 symbol, cmap_df, seq_length_1, seq_length_2
             )
             logging.debug(f"Calculating surface area structure for {symbol}...")
-            struct = calculate_surface_areas(file_path)
+            multimer_struct = calculate_surface_areas(file_path)
             for i in [0, 1]:
                 sym = symbol.split("_")[i]
+                monomer_file = [pdb_file for pdb_file in monomer_pdb_files if sym in pdb_file]
+                assert len(monomer_file) == 1, f'Could not find specific monomer file for {sym}.\nFound:\n{monomer_file}'
+                monomer_symbol = monomer_file[0].split('.')[0]
+                logging.debug(f'Calculating surface area structure for {monomer_symbol}...')
+                monomer_struct = calculate_surface_areas(os.path.join(monomer_dir, monomer_symbol, monomer_file[0]))
                 logging.debug(f"Extracting residue-level surface area for {sym}...")
-                chain_sa = extract_residues(struct[0]["A" if i == 0 else "B"])
+                multimer_chain_sa = extract_residues(multimer_struct[0]["A" if i == 0 else "B"])
+                monomer_chain_sa = extract_residues(monomer_struct[0]['A'])
                 logging.debug(
                     f"Splitting surface areas into interaction and non-interaction for {sym}..."
                 )
-                interaction, non_interaction = apply_residue_mask(
-                    chain_sa, mask_map[sym]
+                multimer_interaction, multimer_non_interaction = apply_residue_mask(
+                    multimer_chain_sa, mask_map[sym]
                 )
-                logging.debug(
-                    f"Interaction: {interaction}\nNon-interaction: {non_interaction}"
+                monomer_interaction, monomer_non_interaction = apply_residue_mask(
+                    monomer_chain_sa, mask_map[sym]
                 )
+                i_sa_avg, i_sa_max, i_sa_min = calculate_sa_metrics(monomer_interaction, multimer_interaction)
+                ni_sa_avg, ni_sa_max, ni_sa_min = calculate_sa_metrics(monomer_non_interaction, multimer_non_interaction)
+                logging.debug(f'Interaction site metrics - avg SA: {i_sa_avg}, max SA: {i_sa_max}, min SA: {i_sa_min}')
+                logging.debug(f'Non-interaction site metrics - avg SA: {ni_sa_avg}, max SA: {ni_sa_max}, min SA: {ni_sa_min}')
 
 
 def parse_command_line():  # pragma: no cover
@@ -250,6 +262,13 @@ def parse_command_line():  # pragma: no cover
         "batch_dir",
         type=str,
         help="The path to the batch directory holding files you want to get the surface area for",
+    )
+    parser.add_argument(
+        '-m',
+        '--monomer_dir',
+        default=None,
+        type=str,
+        help='The path to the directory that holds ColabFold folded monomers'
     )
     parser.add_argument(
         "-v",
@@ -276,13 +295,14 @@ def main():  # pragma: no cover
         if args.logfile is not None
         else os.path.join(os.getcwd(), "logs/surface_area.log")
     )
+    monomer_dir = args.monomer_dir if args.monomer_dir is not None else os.path.join(os.path.dirname(args.batch_dir), 'monomer')
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
         with open(logfile, "w") as file:
             file.write("")  # Write an empty string to create the file
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
-    find_delta_surface_areas(args.batch_dir)
+    find_delta_surface_areas(args.batch_dir, monomer_dir)
 
 
 if __name__ == "__main__":  # pragma: no cover
