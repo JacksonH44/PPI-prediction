@@ -38,14 +38,13 @@ def get_colabfold_metrics(symbol: str, lines: list[str]) -> list[str]:
     query_start_index = lines.index(query_start)
     multimer_string = "reranking models by 'multimer' metric"
     if multimer_string in lines[query_start_index:]:
-        idx = lines.index(
-            "reranking models by 'multimer' metric", query_start_index
-        )
+        idx = lines.index("reranking models by 'multimer' metric", query_start_index)
         line = lines[idx + 1]
         plddt = line.split(" ")[1].split("=")[1]
         iptm = line.split(" ")[2].split("=")[1]
         logging.debug(f"{symbol} - pLDDT: {plddt} ipTM: {iptm}")
         return [plddt, iptm]
+    return ['NA', 'NA']
 
 
 def collect_stats(data_dir: str, stats_file: str):
@@ -84,7 +83,7 @@ def collect_stats(data_dir: str, stats_file: str):
             with open(stats_file, "a") as stats:
                 writer = csv.writer(stats)
                 writer.writerow(features)
-            
+
 
 def parse_command_line():  # pragma : no cover
     """Parse the command line arguments."""

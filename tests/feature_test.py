@@ -14,18 +14,44 @@ from src.features.surface_area import (
     find_interaction_site,
     find_length_split,
     calculate_sa_metrics,
+    surface_area_stats,
 )
+
+
+def test_surface_area_stats_success():
+    """Test that the correct surface area stats are collected from
+    a complex."""
+    expected_result = [
+        -39.6712,
+        6.2926,
+        -121.9814,
+        -2.4747,
+        24.6393,
+        -45.2464,
+        -35.837,
+        5.6288,
+        -92.7167,
+        -0.9476,
+        30.291,
+        -31.6528,
+    ]
+    actual_result = surface_area_stats(
+        "CDKN2A_CYCS",
+        "tests/test_data/colabfold/0",
+        "tests/test_data/colabfold/monomer",
+    )
+    assert actual_result == expected_result
 
 
 def test_get_colabfold_metrics_success():
     """Test that the correct pLDDT and ipTM scores are collected from
     a folded complex."""
-    with open('tests/test_data/colabfold/0/log.txt', "r") as log:
+    with open("tests/test_data/colabfold/0/log.txt", "r") as log:
         lines = log.readlines()
         lines = [line.split(" ", maxsplit=2)[2] for line in lines]
         lines = [line.rstrip("\n") for line in lines]
-        expected_result = ['79.5','0.501']
-        actual_result = get_colabfold_metrics('CDKN2A_TRAPPC2L', lines)
+        expected_result = ["79.5", "0.501"]
+        actual_result = get_colabfold_metrics("CDKN2A_TRAPPC2L", lines)
         assert expected_result == actual_result
 
 
