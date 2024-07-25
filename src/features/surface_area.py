@@ -211,8 +211,10 @@ def get_contact_map(pdb_file: str) -> pd.DataFrame:
 
 
 def find_delta_surface_areas(batch_dir: str, monomer_dir: str) -> None:
-    """Find the change in surface area for the interaction
-    and non-interaction sites for a batch of ColabFold outputs."""
+    """
+    Find the change in surface area for the interaction
+    and non-interaction sites for a batch of ColabFold outputs.
+    """
     multimer_pdb_files = find_pdb_files(batch_dir)
     monomers = os.listdir(monomer_dir)
     monomer_pdb_files = [pdb_file for m in monomers for pdb_file in find_pdb_files(os.path.join(monomer_dir, m))]
@@ -228,7 +230,7 @@ def find_delta_surface_areas(batch_dir: str, monomer_dir: str) -> None:
             mask_map = find_interaction_site(
                 symbol, cmap_df, seq_length_1, seq_length_2
             )
-            logging.debug(f"Calculating surface area structure for {symbol}...")
+            logging.debug(f"Calculating multimer surface area structure for {symbol}...")
             multimer_struct = calculate_surface_areas(file_path)
             for i in [0, 1]:
                 sym = symbol.split("_")[i]
