@@ -37,15 +37,12 @@ jobs:
             
           - name: Test with pytest
             run: |
-              source .venv/bin/activate
               poetry run pytest
           - name: Type check with mypy
             run: |
-              source .venv/bin/activate
               poetry run mypy
           - name: Lint with flake8
             run: |
-                source .venv/bin/activate
                 poetry run flake8 src/data/*
                 poetry run flake8 src/features/*
                 poetry run flake8 tests
