@@ -128,6 +128,7 @@ ENV/
 env.bak/
 venv.bak/
 .alphafold_env/
+.poetry_env
 
 # Spyder project settings
 .spyderproject
@@ -164,8 +165,9 @@ cython_debug/
 .vscode/
 
 # Data files
-test/test_data/single_gene/*
-test/test_output/*
+tests/test_data/single_gene/*
+tests/test_data/msas/multimer/*
+tests/test_output/*
 data/interim/*
 data/processed/colabfold/*
 
