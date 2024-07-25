@@ -35,8 +35,8 @@ jobs:
                 pipx install poetry
                 python3 -m venv .venv
                 source .venv/bin/activate
-                poetry install --no-interaction --with test
-                poetry install --no-interaction --with dev
+                poetry install --no-interaction --no-root --with test
+                poetry install --no-interaction --no-root --with dev
             
           - name: Test with pytest
             run: |
