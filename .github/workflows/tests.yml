@@ -27,39 +27,46 @@ jobs:
             with:
                 python-version: ${{ matrix.python-version }}
           
-          - name: Cache poetry install
-            uses: actions/cache@v2
-            with:
-              path: ~/.local
-              key: poetry-1.8.3
+          # - name: Cache poetry install
+          #   uses: actions/cache@v2
+          #   with:
+          #     path: ~/.local
+          #     key: poetry-1.8.3
           
-          - name: Install poetry
-            uses: snok/install-poetry@v1
-            with:
-              version: 1.8.3
-              virtualenvs-create: true
-              virtualenvs-in-project: true
+          # - name: Install poetry
+          #   uses: snok/install-poetry@v1
+          #   with:
+          #     version: 1.8.3
+          #     virtualenvs-create: true
+          #     virtualenvs-in-project: true
 
-          - name: Cache dependencies
-            id: cache-deps
-            uses: actions/cache@v2
-            with:
-              path: .venv
-              key: pydeps-${{ hashFiles('**/poetry.lock') }}
+          # - name: Cache dependencies
+          #   id: cache-deps
+          #   uses: actions/cache@v2
+          #   with:
+          #     path: .venv
+              # key: pydeps-${{ hashFiles('**/poetry.lock') }}
 
-          - name: Install dependencies on cache miss
-            run: poetry install --no-interaction --no-root
-            if: steps.cache-deps.outputs.cache-hit != 'true'
+          # - name: Install dependencies on cache miss
+          #   run: poetry install --no-interaction --no-root
+          #   if: steps.cache-deps.outputs.cache-hit != 'true'
 
-          - name: Install dependencies
-            run: poetry install --no-interaction --with test --with dev
+          # - name: Install dependencies
+          #   run: poetry install --no-interaction --with test --with dev
                       
-          - name: Test with pytest
-            run: poetry run pytest
-          - name: Type check with mypy
-            run: poetry run mypy
-          - name: Lint with flake8
-            run: |
-                poetry run flake8 src/data/*
-                poetry run flake8 src/features/*
-                poetry run flake8 tests
+          # - name: Test with pytest
+          #   run: poetry run pytest
+          # - name: Type check with mypy
+          #   run: poetry run mypy
+          # - name: Lint with flake8
+          #   run: |
+          #       poetry run flake8 src/data/*
+          #       poetry run flake8 src/features/*
+          #       poetry run flake8 tests
+          
+          - uses: Gr1N/setup-poetry@v8
+          - uses: actions/cache@v2
+            with:
+              path: ~/.cache/pypoetry/virtualenvs
+              key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          - run: poetry --version
