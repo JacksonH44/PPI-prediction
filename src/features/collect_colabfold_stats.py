@@ -48,17 +48,6 @@ def get_colabfold_metrics(symbol: str, lines: list[str]) -> list[str]:
         return [plddt, iptm]
 
 
-def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
-    """Write stats to the stats output file."""
-    plddt = line.split(" ")[1].split("=")[1]
-    iptm = line.split(" ")[2].split("=")[1]
-    best_model = line.split(" ")[0].split("_")[6]
-    logging.debug(f"{symbol} - best model: {best_model} pLDDT: {plddt} ipTM: {iptm}")
-    with open(stats_file, "a") as stats:
-        writer = csv.writer(stats)
-        writer.writerow([symbol, best_model, plddt, iptm])
-
-
 def collect_stats(data_dir: str, stats_file: str):
     """
     Scan the data directory and collect stats

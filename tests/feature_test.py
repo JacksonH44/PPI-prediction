@@ -6,14 +6,27 @@ import pytest
 
 import pandas as pd
 
-from src.features.run_colabfold import create_observations, find_msa, prep_msas
+from src.features.collect_colabfold_stats import get_colabfold_metrics
 from src.features.file_utils import find_all_complexes, find_pdb_files
+from src.features.run_colabfold import create_observations, find_msa, prep_msas
 from src.features.surface_area import (
     apply_residue_mask,
     find_interaction_site,
     find_length_split,
     calculate_sa_metrics,
 )
+
+
+def test_get_colabfold_metrics_success():
+    """Test that the correct pLDDT and ipTM scores are collected from
+    a folded complex."""
+    with open('tests/test_data/colabfold/0/log.txt', "r") as log:
+        lines = log.readlines()
+        lines = [line.split(" ", maxsplit=2)[2] for line in lines]
+        lines = [line.rstrip("\n") for line in lines]
+        expected_result = ['79.5','0.501']
+        actual_result = get_colabfold_metrics('CDKN2A_TRAPPC2L', lines)
+        assert expected_result == actual_result
 
 
 def test_apply_residue_mask_fail():
