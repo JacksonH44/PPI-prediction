@@ -210,10 +210,98 @@ def get_contact_map(pdb_file: str) -> pd.DataFrame:
     return df[["residue1", "residue2"]]
 
 
+def surface_area_stats(complex: str, complex_dir: str, monomer_dir: str):
+    """
+    Return the avg, max, and min change in surface area for interaction
+    and non-interaction site on a complex.
+
+    Parameters
+    ----------
+    complex : str
+        The name of the complex to get stats for
+    complex_dir : str
+        The path to the bottom-most directory that contains the complex
+    monomer_dir : str
+        The path to the top-level monomer directory that contains all monomer
+        Colabfold outputs
+
+    Returns
+    -------
+    list[str]
+        A 12 element list consisting of avg, max, and min change in surface area
+        for the interacting and non-interacting sites of both proteins in the
+        complex
+    """
+    multimer_pdb_files = find_pdb_files(complex_dir)
+    multimer_pdb = [file for file in multimer_pdb_files if complex in file]
+    # Ensure that exactly 1 PDB file is found for the complex
+    assert len(multimer_pdb) == 1, f'Unable to find 1 file for {complex} in {complex_dir}'
+    multimer_pdb = multimer_pdb[0]
+    logging.debug(f'Found multimer PDB file: {multimer_pdb}')
+    # Find all potential monomer PDB files that might be needed
+    monomers = os.listdir(monomer_dir)
+    monomer_pdb_files = [pdb_file for m in monomers for pdb_file in find_pdb_files(os.path.join(monomer_dir, m))]
+
+    symbol = multimer_pdb.split("/")[-1].split(".")[0]
+    split = find_length_split(symbol, complex_dir)
+    if split:
+        file_path = os.path.join(complex_dir, multimer_pdb)
+        seq_length_1, seq_length_2 = split[0], split[1]
+        logging.debug(f"Generating contact map for {symbol}...")
+        cmap_df = get_contact_map(file_path)
+        logging.debug(f"Finding interaction site for {symbol}...")
+        mask_map = find_interaction_site(
+                symbol, cmap_df, seq_length_1, seq_length_2
+        )
+        logging.debug(f"Calculating multimer surface area structure for {symbol}...")
+        multimer_struct = calculate_surface_areas(file_path)
+        features = []
+        # Perform the same commands for each of the two proteins in the complex
+        for i in [0, 1]:
+            sym = symbol.split("_")[i]
+            # Find the corresponding folded monomer PDB file from ColabFold for the protein in the complex
+            monomer_file = [pdb_file for pdb_file in monomer_pdb_files if sym in pdb_file]
+            assert len(monomer_file) == 1, f'Could not find specific monomer file for {sym}.\nFound:\n{monomer_file}'
+            monomer_symbol = monomer_file[0].split('.')[0]
+
+            logging.debug(f'Calculating surface area structure for {monomer_symbol}...')
+            monomer_struct = calculate_surface_areas(os.path.join(monomer_dir, monomer_symbol, monomer_file[0]))
+            logging.debug(f"Extracting residue-level surface area for {sym}...")
+            multimer_chain_sa = extract_residues(multimer_struct[0]["A" if i == 0 else "B"])
+            monomer_chain_sa = extract_residues(monomer_struct[0]['A'])
+            logging.debug(
+                f"Splitting surface areas into interaction and non-interaction for {sym}..."
+            )
+            multimer_interaction, multimer_non_interaction = apply_residue_mask(
+                multimer_chain_sa, mask_map[sym]
+            )
+            monomer_interaction, monomer_non_interaction = apply_residue_mask(
+                monomer_chain_sa, mask_map[sym]
+            )
+            i_sa_avg, i_sa_max, i_sa_min = calculate_sa_metrics(monomer_interaction, multimer_interaction)
+            ni_sa_avg, ni_sa_max, ni_sa_min = calculate_sa_metrics(monomer_non_interaction, multimer_non_interaction)
+            features += [i_sa_avg, i_sa_max, i_sa_min, ni_sa_avg, ni_sa_max, ni_sa_min]
+            
+        driver = symbol.split('_')[0]
+        interactor = symbol.split('_')[1]
+        logging.debug(f'{symbol} stats:')
+        logging.debug(f'{driver}_i_sa_avg,{driver}_i_sa_max,{driver}_i_sa_min,{driver}_ni_sa_avg,{driver}_ni_sa_max,{driver}_ni_sa_min,{interactor}_i_sa_avg,{interactor}_i_sa_max,{interactor}_i_sa_min,{interactor}_ni_sa_avg,{interactor}_ni_sa_max,{interactor}_ni_sa_min')
+        features_str = [str(f) for f in features]
+        logging.debug(','.join(features_str))
+        return features
+
+
 def find_delta_surface_areas(batch_dir: str, monomer_dir: str) -> None:
     """
     Find the change in surface area for the interaction
     and non-interaction sites for a batch of ColabFold outputs.
+
+    Parameters
+    ----------
+    batch_dir : str
+        The path to the file storing complexes of interest
+    monomer_dir : str
+        The path to the file storing monomer complexes of interest
     """
     multimer_pdb_files = find_pdb_files(batch_dir)
     monomers = os.listdir(monomer_dir)
@@ -304,7 +392,8 @@ def main():  # pragma: no cover
             file.write("")  # Write an empty string to create the file
     logging_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(level=logging_level, filename=logfile, filemode="w")
-    find_delta_surface_areas(args.batch_dir, monomer_dir)
+    # find_delta_surface_areas(args.batch_dir, monomer_dir)
+    surface_area_stats('CDKN2A_CYCS', 'tests/test_data/colabfold/0', 'tests/test_data/colabfold/monomer')
 
 
 if __name__ == "__main__":  # pragma: no cover
