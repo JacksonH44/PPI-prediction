@@ -6,8 +6,115 @@ import pytest
 
 import pandas as pd
 
-from src.features.run_colabfold import create_observations, find_msa, prep_msas
+from src.features.collect_colabfold_stats import get_colabfold_metrics
 from src.features.file_utils import find_all_complexes, find_pdb_files
+from src.features.run_colabfold import create_observations, find_msa, prep_msas
+from src.features.surface_area import (
+    apply_residue_mask,
+    find_interaction_site,
+    find_length_split,
+    calculate_sa_metrics,
+    surface_area_stats,
+)
+
+
+def test_surface_area_stats_success():
+    """Test that the correct surface area stats are collected from
+    a complex."""
+    expected_result = [
+        -39.6712,
+        6.2926,
+        -121.9814,
+        -2.4747,
+        24.6393,
+        -45.2464,
+        -35.837,
+        5.6288,
+        -92.7167,
+        -0.9476,
+        30.291,
+        -31.6528,
+    ]
+    actual_result = surface_area_stats(
+        "CDKN2A_CYCS",
+        "tests/test_data/colabfold/0",
+        "tests/test_data/colabfold/monomer",
+    )
+    assert actual_result == expected_result
+
+
+def test_get_colabfold_metrics_success():
+    """Test that the correct pLDDT and ipTM scores are collected from
+    a folded complex."""
+    with open("tests/test_data/colabfold/0/log.txt", "r") as log:
+        lines = log.readlines()
+        lines = [line.split(" ", maxsplit=2)[2] for line in lines]
+        lines = [line.rstrip("\n") for line in lines]
+        expected_result = ["79.5", "0.501"]
+        actual_result = get_colabfold_metrics("CDKN2A_TRAPPC2L", lines)
+        assert expected_result == actual_result
+
+
+def test_apply_residue_mask_fail():
+    """Test that an AssertionError is raised when the length of the surface
+    areas is not equal to the length of the mask provided."""
+    with pytest.raises(AssertionError):
+        apply_residue_mask([4.7823, 1.1008, 0.8923, 2.1129], [True, False, False])
+
+
+def test_apply_residue_mask_success():
+    """Test that a tuple of interaction site surface areas and non-interaction site
+    surface areas is correctly returned."""
+    expected_result = ([4.7823, 2.1129], [1.1008, 0.8923])
+    actual_result = apply_residue_mask(
+        [4.7823, 1.1008, 0.8923, 2.1129], [True, False, False, True]
+    )
+    assert expected_result == actual_result
+
+
+def test_calculate_sa_metrics_fail():
+    """Test that the function correctly throws an error when two residue lists
+    are not the same length."""
+    with pytest.raises(AssertionError):
+        calculate_sa_metrics([3.23423, 4.2342], [8.23432])
+
+
+def test_calculate_sa_metrics_success():
+    """Test that the function correctly calculates the surface area metrics."""
+    expected_result = (-0.9901, 7.106, -8.0947)
+    actual_result = calculate_sa_metrics(
+        [3.324, 8.3289, 2.234], [1.3425, 0.23423, 9.34]
+    )
+    assert expected_result == actual_result
+
+
+def test_find_interaction_site():
+    """Test that the correct residues are found as part of the interaction site."""
+    cmap_data = {
+        "residue_1": [1, 2, 2, 3, 5, 6, 7, 9],
+        "residue_2": [1, 2, 5, 7, 5, 3, 8, 8],
+    }
+    cmap_df = pd.DataFrame(data=cmap_data)
+    expected_result = {
+        "TEST1": [False, True, True, False],
+        "TEST2": [True, True, True, False, False],
+    }
+    actual_result = find_interaction_site("TEST1_TEST2", cmap_df, 4, 5)
+    assert actual_result == expected_result
+
+
+def test_find_length_split_fail():
+    """Test that when a symbol doesn't exist the error is handled elegantly."""
+    expected_result = None
+    actual_result = find_length_split("FANCE_FANCF", "tests/test_data/colabfold/0")
+    assert expected_result == actual_result
+
+
+def test_find_length_split_success():
+    """Verify that lengths are found accurately for complexes."""
+    expected_result = (164, 100)
+    actual_result = find_length_split("SRSF3_GGTA1", "tests/test_data/colabfold/0")
+    assert actual_result == expected_result
 
 
 def test_find_pdb_files_success():

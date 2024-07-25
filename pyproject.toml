@@ -4,6 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ppi-prediction"
+package-mode = false
 version = "0.1.0"
 description = "A python library for predicting protein-protein interactions"
 authors = ["Jackson Howe <j2howe@uwaterloo.ca>"]
@@ -12,24 +13,24 @@ readme = "README.rst"
 repository = "https://github.com/JacksonH44/PPI-prediction"
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.13"
+python = ">=3.10, <3.13"
 aiohttp = ">=3.9.5"
 boto3 = ">=1.34.131"
 contact-map = "^0.7.0"
 matplotlib = "^3.9.1"
-mdtraj = "1.9.9"
-numpy = ">=1.26.4"
+mdtraj = ">=1.10"
 pandas = ">=2.2.2"
 pyyaml = ">=6.0.1"
 python-calamine = ">=0.2.0"
 requests = ">=2.32.3"
 types-boto3 = ">=1.0.2"
+biopython = "^1.84"
 
 [tool.poetry.group.test]
 optional = true

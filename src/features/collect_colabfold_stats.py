@@ -16,15 +16,35 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_all_complexes
 
 
-def write_to_stats_file(stats_file: str, line: str, symbol: str) -> None:
-    """Write stats to the stats output file."""
-    plddt = line.split(" ")[1].split("=")[1]
-    iptm = line.split(" ")[2].split("=")[1]
-    best_model = line.split(" ")[0].split("_")[6]
-    logging.debug(f"{symbol} - best model: {best_model} pLDDT: {plddt} ipTM: {iptm}")
-    with open(stats_file, "a") as stats:
-        writer = csv.writer(stats)
-        writer.writerow([symbol, best_model, plddt, iptm])
+def get_colabfold_metrics(symbol: str, lines: list[str]) -> list[str]:
+    """
+    Return the best model, pLDDT score, and ipTM score from the ColabFold log
+    output file.
+
+    Parameters
+    ----------
+    symbol : str
+        The complex symbol
+    lines : list[str]
+        The processed lines of the logfile ready for metric extraction
+
+    Returns
+    -------
+    list[str]
+        A 2 element list consisting of [plddt, iptm] representing
+        features for the complex
+    """
+    query_start = [line for line in lines if symbol in line][0]
+    query_start_index = lines.index(query_start)
+    multimer_string = "reranking models by 'multimer' metric"
+    if multimer_string in lines[query_start_index:]:
+        idx = lines.index("reranking models by 'multimer' metric", query_start_index)
+        line = lines[idx + 1]
+        plddt = line.split(" ")[1].split("=")[1]
+        iptm = line.split(" ")[2].split("=")[1]
+        logging.debug(f"{symbol} - pLDDT: {plddt} ipTM: {iptm}")
+        return [plddt, iptm]
+    return ['NA', 'NA']
 
 
 def collect_stats(data_dir: str, stats_file: str):
@@ -50,21 +70,19 @@ def collect_stats(data_dir: str, stats_file: str):
         symbols = find_all_complexes(data_dir)
         with open(stats_file, "w") as stats:
             writer = csv.writer(stats)
-            writer.writerow(["symbol", "best_model", "pLDDT", "ipTM"])
+            writer.writerow(["symbol", "pLDDT", "ipTM"])
     logfile = os.path.join(data_dir, "log.txt")
     with open(logfile, "r") as log:
         lines = log.readlines()
         lines = [line.split(" ", maxsplit=2)[2] for line in lines]
         lines = [line.rstrip("\n") for line in lines]
         for symbol in symbols:
-            query_start = [line for line in lines if symbol in line][0]
-            query_start_index = lines.index(query_start)
-            multimer_string = "reranking models by 'multimer' metric"
-            if multimer_string in lines[query_start_index:]:
-                idx = lines.index(
-                    "reranking models by 'multimer' metric", query_start_index
-                )
-                write_to_stats_file(stats_file, lines[idx + 1], symbol)
+            features = []
+            features.append(symbol)
+            features += get_colabfold_metrics(symbol, lines)
+            with open(stats_file, "a") as stats:
+                writer = csv.writer(stats)
+                writer.writerow(features)
 
 
 def parse_command_line():  # pragma : no cover
