@@ -16,7 +16,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_all_complexes
 
 
-def _extract_metrics_from_line(line: str) -> tuple[float, float, float]:  # pragma: no cover
+def _extract_metrics_from_line(
+    line: str,
+) -> tuple[float, float, float]:  # pragma: no cover
     """
     Take a line of the form:
 

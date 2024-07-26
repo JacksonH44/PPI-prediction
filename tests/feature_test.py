@@ -22,23 +22,24 @@ def test_surface_area_stats_success():
     """Test that the correct surface area stats are collected from
     a complex."""
     expected_result = [
-        -39.6712,
-        6.2926,
-        -121.9814,
-        -2.4747,
-        24.6393,
-        -45.2464,
+        -49.3577,
+        -59.8454,
+        -30.1946,
         -35.837,
-        5.6288,
-        -92.7167,
-        -0.9476,
-        30.291,
-        -31.6528,
+        -42.59048,
+        -46.51482,
+        -3.2862,
+        -1.2802,
+        -1.2838,
+        -0.749,
+        -2.34166,
+        -1.0765,
     ]
     actual_result = surface_area_stats(
         "CDKN2A_CYCS",
         "tests/test_data/colabfold/0",
         "tests/test_data/colabfold/monomer",
+        5,
     )
     assert actual_result == expected_result
 
@@ -95,7 +96,7 @@ def test_calculate_sa_metrics_fail():
 
 def test_calculate_sa_metrics_success():
     """Test that the function correctly calculates the surface area metrics."""
-    expected_result = (-0.9901, 7.106, -8.0947)
+    expected_result = -0.9901
     actual_result = calculate_sa_metrics(
         [3.324, 8.3289, 2.234], [1.3425, 0.23423, 9.34]
     )

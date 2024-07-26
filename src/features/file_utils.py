@@ -35,7 +35,7 @@ def find_all_complexes(batch_path: str) -> list[str]:
     return complexes
 
 
-def find_pdb_files(batch_path: str) -> list[str]:
+def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
     """
     Crawl through a batch directory and return the PDB file
     that corresponds to the best model predicted by ColabFold.
@@ -45,6 +45,9 @@ def find_pdb_files(batch_path: str) -> list[str]:
     batch_path : str
         The path to the batch directory you wish to extract
         PDB files from
+    num_models : int
+        The number of models to get PDB files for, will get the best n
+        models you specify
 
     Returns
     -------
@@ -56,15 +59,19 @@ def find_pdb_files(batch_path: str) -> list[str]:
     pdb_list = []
     complex_symbols = find_all_complexes(batch_path)
     for symbol in complex_symbols:
-        multimer_pattern = rf"^{symbol}.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
-        monomer_pattern = (
-            rf"^{symbol}.msa_unrelaxed_rank_001_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
-        )
-        pdb_list.append(
-            [
-                file
-                for file in os.listdir(batch_path)
-                if re.match(multimer_pattern, file) or re.match(monomer_pattern, file)
-            ][0]
-        )
+        for model_no in range(1, num_models + 1):
+            multimer_pattern = (
+                rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
+            )
+            monomer_pattern = (
+                rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
+            )
+            pdb_list.append(
+                [
+                    file
+                    for file in os.listdir(batch_path)
+                    if re.match(multimer_pattern, file)
+                    or re.match(monomer_pattern, file)
+                ][0]
+            )
     return pdb_list
