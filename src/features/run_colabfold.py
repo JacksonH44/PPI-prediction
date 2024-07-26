@@ -68,7 +68,12 @@ def run_colabfold_script(
     df["file"] = df["symbol"].apply(lambda symbol: prep_msas(symbol, msa_dir))
     logging.debug(df.head(5))
     files = df["file"].to_list()
+    logging.debug(files)
     input_path = os.path.join(msa_dir, str(batch_number))
+    
+    # Just remove the directory of MSAs if it's already there, a little redundant
+    # but it avoids error
+    shutil.rmtree(input_path)
     os.makedirs(input_path, exist_ok=True)
     for msa_file in files:
         shutil.move(os.path.join(msa_dir, msa_file), input_path)

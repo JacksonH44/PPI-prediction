@@ -170,6 +170,7 @@ tests/test_data/msas/multimer/*
 tests/test_output/*
 data/interim/*
 data/processed/colabfold/*
+tests/test_data/msas/multimer/*
 
 # Log files
 log/*
@@ -188,3 +189,6 @@ config/config.yml
 
 # HPC specific files
 src/hpc/
+
+# Git stuff
+pat.txt
