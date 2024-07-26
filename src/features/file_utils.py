@@ -46,8 +46,8 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
         The path to the batch directory you wish to extract
         PDB files from
     num_models : int
-        The number of models to get PDB files for, defaults to 1 if you only
-        want the PDB file for the best performing model
+        The number of models to get PDB files for, will get the best n
+        models you specify
 
     Returns
     -------
