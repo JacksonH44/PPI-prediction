@@ -60,8 +60,12 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
     complex_symbols = find_all_complexes(batch_path)
     for symbol in complex_symbols:
         for model_no in range(1, num_models + 1):
-            multimer_pattern = rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
-            monomer_pattern = rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
+            multimer_pattern = (
+                rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
+            )
+            monomer_pattern = (
+                rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
+            )
             pdb_list.append(
                 [
                     file
