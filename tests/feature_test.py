@@ -10,11 +10,14 @@ from src.features.collect_colabfold_stats import get_colabfold_metrics
 from src.features.file_utils import find_all_complexes, find_pdb_files
 from src.features.run_colabfold import create_observations, find_msa, prep_msas
 from src.features.surface_area import (
+    calculate_sa_metrics,
+    surface_area_stats,
+)
+
+from src.features.interaction_site import (
     apply_residue_mask,
     find_interaction_site,
     find_length_split,
-    calculate_sa_metrics,
-    surface_area_stats,
 )
 
 
