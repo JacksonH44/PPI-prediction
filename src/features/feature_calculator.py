@@ -208,6 +208,23 @@ class FeatureCalculator(ABC):
             self._apply_residue_mask(self._monomer_residue_metrics)
         )
 
+    
+    def calculate_delta_metrics(self) -> tuple[float, float]:
+        """
+        Return the average difference in the multimer metric and the monomer metric
+
+        Returns
+        -------
+        float
+            The difference in average metric between multimer and monomer
+        """
+        assert len(self._monomer_residue_metrics) == len(
+            self._multimer_residue_metrics
+        ), "The lengths of monomer and multimer residues should be the same"
+        return round(
+            (sum(self._multimer_residue_metrics) - sum(self._monomer_residue_metrics)) / len(self._monomer_residue_metrics), 4
+        )
+
 
 if __name__ == "__main__":
     fc = FeatureCalculator(
