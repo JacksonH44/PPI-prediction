@@ -192,3 +192,7 @@ src/hpc/
 
 # Git stuff
 pat.txt
+
+# R files
+.RData
+.Rhistory
