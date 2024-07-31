@@ -1,11 +1,13 @@
+from abc import ABC, abstractmethod
 import os
+from typing import Optional
 
 import numpy as np
 from contact_map import ContactFrequency  # type: ignore
 import mdtraj as md  # type: ignore
 
 
-class FeatureCalculator:
+class FeatureCalculator(ABC):
     """
     A class that represents a feature calculation
 
@@ -160,7 +162,7 @@ class FeatureCalculator:
 
     def _apply_residue_mask(
         self, residue_metrics: list[float]
-    ) -> tuple[list[float], list[float]]:
+    ) -> Optional[tuple[list[float], list[float]]]:
         """
         Get a list of residues and a mask as input, and return two lists of residues -
         one for the interaction site, and one for the non-interaction site
@@ -172,6 +174,7 @@ class FeatureCalculator:
             print(
                 "Calculate the residue-level metric before applying the interaction site mask"
             )
+            return
         symbol_mask = self._mask_map[self._monomer_symbol]
         interaction_site = [
             residue_metrics[i] for i in range(len(residue_metrics)) if symbol_mask[i]
@@ -183,8 +186,13 @@ class FeatureCalculator:
         ]
         return interaction_site, non_interaction_site
 
+    @abstractmethod
     def _calculate_residue_metrics(self):
-        print("Override me!")
+        """
+        This should calculate residue level metrics, and assign values
+        to self._multimer_residue_metrics and self._monomer_residue_metrics
+        """
+
 
     def calculate_residue_metrics(self):
         """
