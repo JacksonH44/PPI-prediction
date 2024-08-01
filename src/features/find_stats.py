@@ -9,10 +9,12 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_pdb_files
+from src.features.feature_calculator import FeatureCalculator
+from src.features.frustration_calculator import FrustrationCalculator
 from src.features.surface_area_calculator import SurfaceAreaCalculator
 
 
-def surface_area_stats(
+def find_stats(
     complex: str, complex_dir: str, monomer_dir: str, feature_type: str, num_models: int = 1
 ) -> list[float]:
     """
@@ -66,6 +68,8 @@ def surface_area_stats(
     min_ni_sa = [float("inf"), float("inf")]
     max_ni_sa = [float("-inf"), float("-inf")]
     avg_ni_sa = [0.0, 0.0]
+
+    file_args = []
     
     for rank in range(1, num_models + 1):
         multimer_pattern = rf"^{complex}.msa_unrelaxed_rank_00{rank}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
@@ -90,9 +94,13 @@ def surface_area_stats(
                     if symbol in pdb_file
                 ][0]
             absolute_monomer_pdb_path = os.path.join(monomer_dir, monomer_file)
-            sac = SurfaceAreaCalculator(absolute_multimer_pdb_path, absolute_monomer_pdb_path)
-            sac.calculate_residue_metrics()
-            interaction_delta, non_interaction_delta = sac.calculate_delta_metrics()
+            file_args.append([absolute_multimer_pdb_path, absolute_monomer_pdb_path, feature_type])
+            if feature_type == 'surface_area':
+                fc = SurfaceAreaCalculator(absolute_multimer_pdb_path, absolute_monomer_pdb_path)
+            elif feature_type == 'frustration':
+                fc = FrustrationCalculator(absolute_multimer_pdb_path, absolute_monomer_pdb_path)
+            fc.calculate_residue_metrics()
+            interaction_delta, non_interaction_delta = fc.calculate_delta_metrics()
             # Calculate min, max, and avg delta SA for interaction and non-interaction site
             min_i_sa[i] = min(min_i_sa[i], interaction_delta)
             max_i_sa[i] = max(max_i_sa[i], interaction_delta)
@@ -120,7 +128,7 @@ if __name__ == '__main__':
         'CDKN2A_CYCS',
         'tests/test_data/colabfold/0',
         'tests/test_data/colabfold/monomer',
-        'surface_area',
+        'frustration',
         5
     )
     print(features)
