@@ -59,6 +59,16 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
     pdb_list = []
     complex_symbols = find_all_complexes(batch_path)
     for symbol in complex_symbols:
+        base_pdb_pattern = (
+            rf"^{symbol}.*\.pdb"
+        )
+        pdb_list.append(
+            [
+                file
+                for file in os.listdir(batch_path)
+                if re.match(base_pdb_pattern, file)
+            ][0]
+        )
         for model_no in range(1, num_models + 1):
             multimer_pattern = (
                 rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
@@ -66,12 +76,14 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
             monomer_pattern = (
                 rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
             )
-            pdb_list.append(
-                [
+            files_found = [
                     file
                     for file in os.listdir(batch_path)
                     if re.match(multimer_pattern, file)
                     or re.match(monomer_pattern, file)
-                ][0]
-            )
+            ]
+            if len(files_found) != 0:
+                pdb_list.append(
+                    files_found[0]
+                )
     return pdb_list

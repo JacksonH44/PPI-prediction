@@ -13,7 +13,7 @@ from src.features.surface_area_calculator import SurfaceAreaCalculator
 
 
 def surface_area_stats(
-    complex: str, complex_dir: str, monomer_dir: str, num_models: int = 1, feature_type: str
+    complex: str, complex_dir: str, monomer_dir: str, feature_type: str, num_models: int = 1
 ) -> list[float]:
     """
     Return the avg, max, and min change in surface area for interaction
@@ -28,11 +28,11 @@ def surface_area_stats(
     monomer_dir : str
         The path to the top-level monomer directory that contains all monomer
         Colabfold outputs
+    feature_type : str
+        The type of feature you'd like to calculate
     num_models : int
         The number of AlphaFold models you'd like to take into account (defaults to 1,
         use 5 if you'd like to include all models)
-    feature_type : str
-        The type of feature you'd like to calculate
 
     Returns
     -------
@@ -84,7 +84,7 @@ def surface_area_stats(
             if len(monomer_res) == 1:
                 monomer_file = monomer_res[0]
             else:
-                monomer_res = [
+                monomer_file = [
                     pdb_file
                     for pdb_file in monomer_pdb_files
                     if symbol in pdb_file
@@ -120,6 +120,7 @@ if __name__ == '__main__':
         'CDKN2A_CYCS',
         'tests/test_data/colabfold/0',
         'tests/test_data/colabfold/monomer',
+        'surface_area',
         5
     )
     print(features)
