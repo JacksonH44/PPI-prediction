@@ -1,99 +1,19 @@
 """
-A collection of functions to extract the change
-in surface area from a complex.
+Compute the average, max, and min surface area across multiple
+multimer models.
 """
 
-import logging
 import os
-import sys
 import re
-from typing import Optional
-
-from Bio.PDB import PDBParser, SASA  # type: ignore
+import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_pdb_files
-from src.features.interaction_site import (
-    apply_residue_mask,
-    find_interaction_site,
-    find_length_split,
-    get_contact_map,
-)
-
-
-def calculate_sa_metrics(
-    monomer_residues: list[float], multimer_residues: list[float]
-) -> float:
-    """
-    Return the average, minimum, and maximum change in surface area (SA) between
-    two sets of residues
-
-    Parameters
-    ----------
-    monomer_residues : list[float]
-        The SAs for the residues when they are in monomer form
-    multimer_residues : list[float]
-        The SAs for the residues when they are in multimer form
-
-    Returns
-    -------
-    metrics : float
-        A triple of average change in SA, max change in SA, and min change in SA
-    """
-    assert len(monomer_residues) == len(
-        multimer_residues
-    ), "The lengths of monomer and multimer residues should be the same"
-    return round(
-        (sum(multimer_residues) - sum(monomer_residues)) / len(monomer_residues), 4
-    )
-
-
-def extract_residues(chain) -> list[float]:
-    """
-    Return a list with the same length as the input sequence of surface areas,
-    one entry for each sequence. The model index and chain should already be specified
-    (e.g. usage: extract_residues(struct[0]['A']))
-
-    Parameters
-    ----------
-    chain : Chain
-        The input chain for which to extract residue-level surface area calculations from
-
-    Returns
-    -------
-    surface_areas : list[float]
-        A list of surface areas the same length as the number of residues in the chain rounded
-        to 4 significant digits
-    """
-    surface_areas = [round(chain[i].sasa, 4) for i in range(1, len(chain) + 1)]
-    return surface_areas
-
-
-def calculate_surface_areas(pdb_path: str):
-    """
-    Calculates surface areas for each residue of a structure in a PDB file
-
-    Parameters
-    ----------
-    pdb_path : str
-        The path to the PDB file you want to calculate surface areas of
-
-    Returns
-    -------
-    sr : Structure
-        A structure object representing the residue-level computed surface areas
-        for the PDB file
-    """
-    p = PDBParser(QUIET=1)
-    symbol = pdb_path.split("/")[-1].split(".")[0]
-    struct = p.get_structure(symbol, pdb_path)
-    sr = SASA.ShrakeRupley()
-    sr.compute(struct, level="R")
-    return struct
+from src.features.surface_area_calculator import SurfaceAreaCalculator
 
 
 def surface_area_stats(
-    complex: str, complex_dir: str, monomer_dir: str, num_models: int = 1
+    complex: str, complex_dir: str, monomer_dir: str, num_models: int = 1, feature_type: str
 ) -> list[float]:
     """
     Return the avg, max, and min change in surface area for interaction
@@ -111,6 +31,8 @@ def surface_area_stats(
     num_models : int
         The number of AlphaFold models you'd like to take into account (defaults to 1,
         use 5 if you'd like to include all models)
+    feature_type : str
+        The type of feature you'd like to calculate
 
     Returns
     -------
@@ -122,7 +44,7 @@ def surface_area_stats(
 
     Usage
     -----
-    e.g., surface_area_stats(
+    surface_area_stats(
         'CDKN2A_CYCS',
         'tests/test_data/colabfold/0',
         'tests/test_data/colabfold/monomer',
@@ -137,9 +59,6 @@ def surface_area_stats(
         for m in monomers
         for pdb_file in find_pdb_files(os.path.join(monomer_dir, m), num_models)
     ]
-    split = find_length_split(complex, complex_dir)
-    if split is None:
-        return [float("nan")] * 12
 
     min_i_sa = [float("inf"), float("inf")]
     max_i_sa = [float("-inf"), float("-inf")]
@@ -147,51 +66,33 @@ def surface_area_stats(
     min_ni_sa = [float("inf"), float("inf")]
     max_ni_sa = [float("-inf"), float("-inf")]
     avg_ni_sa = [0.0, 0.0]
+    
     for rank in range(1, num_models + 1):
         multimer_pattern = rf"^{complex}.msa_unrelaxed_rank_00{rank}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
         multimer_pdb_file = [
             file for file in multimer_pdb if re.match(multimer_pattern, file)
         ][0]
-        # generate contact map for this model
-        file_path = os.path.join(complex_dir, multimer_pdb_file)
-        cmap_df = get_contact_map(file_path)
-        # find the interaction site for this complex based on the contact map
-        mask_map = find_interaction_site(complex, cmap_df, split[0], split[1])
-        # calculate the surface areas for the complex
-        multimer_struct = calculate_surface_areas(file_path)
-        # analyze monomers
+        absolute_multimer_pdb_path = os.path.join(complex_dir, multimer_pdb_file)
         for i in [0, 1]:
             symbol = complex.split("_")[i]
-            monomer_pattern = rf".*_{symbol}.msa_unrelaxed_rank_00{rank}_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
-            monomer_file = [
+            monomer_pattern = rf".*_{symbol}.msa_unrelaxed_rank_001_alphafold2_ptm_model_\d+_seed_\d+\.pdb"
+            monomer_res = [
                 pdb_file
                 for pdb_file in monomer_pdb_files
                 if re.match(monomer_pattern, pdb_file.split("/")[-1])
-            ][0]
-            # calculate surface areas for the monomer
-            monomer_struct = calculate_surface_areas(
-                os.path.join(monomer_dir, monomer_file)
-            )
-            # extract residues from multimer chain
-            multimer_chain_sa = extract_residues(
-                multimer_struct[0]["A" if i == 0 else "B"]
-            )
-            # extract residues from monomer chain
-            monomer_chain_sa = extract_residues(monomer_struct[0]["A"])
-            # divide multimer and monomer SAs into interaction and non-interaction
-            multimer_interaction, multimer_non_interaction = apply_residue_mask(
-                multimer_chain_sa, mask_map[symbol]
-            )
-            monomer_interaction, monomer_non_interaction = apply_residue_mask(
-                monomer_chain_sa, mask_map[symbol]
-            )
-            interaction_delta = calculate_sa_metrics(
-                monomer_interaction, multimer_interaction
-            )
-            non_interaction_delta = calculate_sa_metrics(
-                monomer_non_interaction, multimer_non_interaction
-            )
-
+            ]
+            if len(monomer_res) == 1:
+                monomer_file = monomer_res[0]
+            else:
+                monomer_res = [
+                    pdb_file
+                    for pdb_file in monomer_pdb_files
+                    if symbol in pdb_file
+                ][0]
+            absolute_monomer_pdb_path = os.path.join(monomer_dir, monomer_file)
+            sac = SurfaceAreaCalculator(absolute_multimer_pdb_path, absolute_monomer_pdb_path)
+            sac.calculate_residue_metrics()
+            interaction_delta, non_interaction_delta = sac.calculate_delta_metrics()
             # Calculate min, max, and avg delta SA for interaction and non-interaction site
             min_i_sa[i] = min(min_i_sa[i], interaction_delta)
             max_i_sa[i] = max(max_i_sa[i], interaction_delta)
@@ -200,10 +101,10 @@ def surface_area_stats(
             max_ni_sa[i] = max(max_ni_sa[i], non_interaction_delta)
             avg_ni_sa[i] += non_interaction_delta
 
-    avg_i_sa[0] = avg_i_sa[0] / num_models if avg_i_sa[0] != 0 else 0
-    avg_i_sa[1] = avg_i_sa[1] / num_models if avg_i_sa[1] != 0 else 0
-    avg_ni_sa[0] = avg_ni_sa[0] / num_models if avg_ni_sa[0] != 0 else 0
-    avg_ni_sa[1] = avg_ni_sa[1] / num_models if avg_ni_sa[1] != 0 else 0
+    avg_i_sa[0] = round(avg_i_sa[0] / num_models if avg_i_sa[0] != 0 else 0, 4)
+    avg_i_sa[1] = round(avg_i_sa[1] / num_models if avg_i_sa[1] != 0 else 0, 4)
+    avg_ni_sa[0] = round(avg_ni_sa[0] / num_models if avg_ni_sa[0] != 0 else 0, 4)
+    avg_ni_sa[1] = round(avg_ni_sa[1] / num_models if avg_ni_sa[1] != 0 else 0, 4)
     features = []
     features += min_i_sa
     features += max_i_sa
@@ -212,3 +113,13 @@ def surface_area_stats(
     features += max_ni_sa
     features += avg_ni_sa
     return features
+
+
+if __name__ == '__main__':
+    features = surface_area_stats(
+        'CDKN2A_CYCS',
+        'tests/test_data/colabfold/0',
+        'tests/test_data/colabfold/monomer',
+        5
+    )
+    print(features)
