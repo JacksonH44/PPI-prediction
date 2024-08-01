@@ -215,15 +215,23 @@ class FeatureCalculator(ABC):
 
         Returns
         -------
-        float
-            The difference in average metric between multimer and monomer
+        tuple[float, float]
+            The difference in average metric between multimer and monomer for the interaction site,
+            non-interaction site
         """
-        assert len(self._monomer_residue_metrics) == len(
-            self._multimer_residue_metrics
-        ), "The lengths of monomer and multimer residues should be the same"
-        return round(
-            (sum(self._multimer_residue_metrics) - sum(self._monomer_residue_metrics)) / len(self._monomer_residue_metrics), 4
+        assert len(self._monomer_interaction_site) == len(
+            self._multimer_interaction_site
+        ), "The lengths of monomer and multimer residue interaction site should be the same"
+        assert len(self._monomer_non_interaction_site) == len(
+            self._multimer_non_interaction_site
+        ), "The lengths of monomer and multimer residue interaction site should be the same"
+        interaction_delta = round(
+            (sum(self._multimer_interaction_site) - sum(self._monomer_interaction_site)) / len(self._monomer_interaction_site), 4
         )
+        non_interaction_delta = round(
+            (sum(self._multimer_non_interaction_site) - sum(self._monomer_non_interaction_site)) / len(self._monomer_non_interaction_site), 4
+        )
+        return (interaction_delta, non_interaction_delta)
 
 
 if __name__ == "__main__":
