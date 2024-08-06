@@ -3,6 +3,7 @@ Compute the average, max, and min surface area across multiple
 multimer models.
 """
 
+import logging
 import os
 import re
 import sys
@@ -16,9 +17,9 @@ from src.features.surface_area_calculator import SurfaceAreaCalculator
 
 def find_stats(
     complex: str, complex_dir: str, monomer_dir: str, feature_type: str, num_models: int = 1
-) -> list[float]:
+) -> list[str]:
     """
-    Return the avg, max, and min change in surface area for interaction
+    Return the avg, max, and min change in a metric for interaction
     and non-interaction site on a complex.
 
     Parameters
@@ -38,28 +39,27 @@ def find_stats(
 
     Returns
     -------
-    list[str]
+    str_features : list[str]
         A 12 element list in the following order (i: interaction site, ni: non-interaction site,
         sa: surface area, 1: cancer driver gene, 2: interacting partner):
-        [min_i_sa_1, min_i_sa_2, max_i_sa_1, max_i_sa_2, avg_i_sa_1, avg_i_sa_2,
-        min_ni_sa_1, min_ni_sa_2, max_ni_sa_1, max_ni_sa_1, avg_ni_sa_1, avg_ni_sa_2]
+        [min_i_1, min_i_2, max_i_1, max_i_2, avg_i_1, avg_i_2,
+        min_ni_1, min_ni_2, max_ni_1, max_ni_1, avg_ni_1, avg_ni_2]
 
     Usage
     -----
-    surface_area_stats(
+    find_stats(
         'CDKN2A_CYCS',
         'tests/test_data/colabfold/0',
         'tests/test_data/colabfold/monomer',
+        'surface_area',
         5
     )
     """
     all_pdb_files = find_pdb_files(complex_dir, num_models)
     multimer_pdb = [file for file in all_pdb_files if complex in file]
-    monomers = os.listdir(monomer_dir)
     monomer_pdb_files = [
-        os.path.join(m, pdb_file)
-        for m in monomers
-        for pdb_file in find_pdb_files(os.path.join(monomer_dir, m), num_models)
+        pdb_file 
+        for pdb_file in find_pdb_files(monomer_dir)
     ]
 
     min_i_sa = [float("inf"), float("inf")]
@@ -91,7 +91,7 @@ def find_stats(
                 monomer_file = [
                     pdb_file
                     for pdb_file in monomer_pdb_files
-                    if symbol in pdb_file
+                    if symbol == pdb_file.split('.')[0].split('_')[-1]
                 ][0]
             absolute_monomer_pdb_path = os.path.join(monomer_dir, monomer_file)
             file_args.append([absolute_multimer_pdb_path, absolute_monomer_pdb_path, feature_type])
@@ -120,15 +120,16 @@ def find_stats(
     features += min_ni_sa
     features += max_ni_sa
     features += avg_ni_sa
-    return features
+    str_features = [str(feat) for feat in features]
+    return str_features
 
 
 if __name__ == '__main__':
-    features = surface_area_stats(
-        'CDKN2A_CYCS',
-        'tests/test_data/colabfold/0',
-        'tests/test_data/colabfold/monomer',
-        'frustration',
+    features = find_stats(
+        'CDKN2A_CDKN2AIP',
+        '/cluster/projects/kumargroup/jackson/colabfold/212',
+        '/cluster/projects/kumargroup/jackson/colabfold/monomer',
+        'surface_area',
         5
     )
     print(features)

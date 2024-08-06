@@ -103,6 +103,7 @@ def collect_stats(data_dir: str, monomer_dir: str, stats_file: str):
         file with headers symbol,plddt,iptm,best_model
     """
     symbols = find_all_complexes(data_dir)
+    logging.debug(f'Found complexes:\n{symbols}')
     with open(stats_file, "w") as stats:
         writer = csv.writer(stats)
         header = [
@@ -142,11 +143,13 @@ def collect_stats(data_dir: str, monomer_dir: str, stats_file: str):
             "avg_fi_ni_1",
             "avg_fi_ni_2",
         ]
+        logging.debug('Writing header...')
         writer.writerow(header)
         for symbol in symbols:
             features = [symbol]
             colabfold_metrics = get_colabfold_metrics(symbol, data_dir)
             features += colabfold_metrics
+            logging.debug(f'Finding surface area for {symbol}')
             features += find_stats(symbol, data_dir, monomer_dir, "surface_area", 5)
             features += find_stats(symbol, data_dir, monomer_dir, "frustration", 5)
             writer.writerow(features)

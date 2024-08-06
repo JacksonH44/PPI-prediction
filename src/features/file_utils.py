@@ -62,13 +62,13 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
         base_pdb_pattern = (
             rf"^{symbol}.*\.pdb"
         )
-        pdb_list.append(
-            [
-                file
-                for file in os.listdir(batch_path)
-                if re.match(base_pdb_pattern, file)
-            ][0]
-        )
+        base_pdbs = [
+            file
+            for file in os.listdir(batch_path)
+            if re.match(base_pdb_pattern, file)
+        ]
+        if len(base_pdbs) != 0:
+            pdb_list.append(base_pdbs[0])
         for model_no in range(1, num_models + 1):
             multimer_pattern = (
                 rf"^{symbol}.msa_unrelaxed_rank_00{model_no}_alphafold2_multimer_v3_model_\d+_seed_\d+\.pdb$"
