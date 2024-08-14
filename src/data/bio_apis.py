@@ -207,7 +207,7 @@ async def get_interactors(
         "taxId": 9606,  # Homo Sapiens taxonomy ID
         "includeHeader": "true",
     }
-    resp = await session.request("GET", url=request_url, params=params)
+    resp = await session.request("GET", url=request_url, params=params)  # type: ignore
     if resp.status != 200:
         logging.warning("Failed to get request for one of the genes in the gene list")
         return []

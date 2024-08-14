@@ -53,7 +53,7 @@ def find_triplets(infile, positive):
             "Interactor_ID",
             "Interaction_Found",
         ],
-        engine="calamine",
+        engine="openpyxl",
     )
     if positive:
         reference_isoforms = ppi_df[
