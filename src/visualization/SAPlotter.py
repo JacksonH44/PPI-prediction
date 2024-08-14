@@ -25,7 +25,7 @@ class SAPlotter(Plotter):
 
     def _feature_init(self):
         """
-        Create features for plotting confidence
+        Create features for plotting surface area
         """
         self._title = "Boxplot of Change in Surface Area"
         self._ylabel = "$\Delta$ Surface Area ($\AA$)"
