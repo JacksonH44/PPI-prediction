@@ -28,8 +28,8 @@ def ppi_in_MANE(ppi: str, mane_df: pd.DataFrame) -> bool:
     """Check if both of the proteins in a ppi are in the MANE summary."""
     protein_a, protein_b = ppi.split("*")
     return (
-        mane_df.applymap(lambda x: x == protein_a).any().any()
-        and mane_df.applymap(lambda x: x == protein_b).any().any()
+        (mane_df == protein_a).any().any()
+        and (mane_df == protein_b).any().any()
     )
 
 
