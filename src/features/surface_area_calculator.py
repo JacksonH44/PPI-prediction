@@ -1,6 +1,6 @@
 from Bio.PDB import PDBParser, SASA  # type: ignore
 
-from feature_calculator import FeatureCalculator  # type: ignore
+from src.features.feature_calculator import FeatureCalculator  # type: ignore
 
 
 class SurfaceAreaCalculator(FeatureCalculator):
@@ -70,13 +70,3 @@ class SurfaceAreaCalculator(FeatureCalculator):
         )
         monomer_struct = self._calculate_surface_area_struct(self._monomer_pdb_path)
         self._monomer_residue_metrics = self._extract_residues(monomer_struct[0]["A"])
-
-
-if __name__ == "__main__":
-    sac = SurfaceAreaCalculator(
-        "tests/test_data/colabfold/0/CDKN2A_CYCS.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_5_seed_000.pdb",
-        "tests/test_data/colabfold/monomer/ENST00000304494_CDKN2A/ENST00000304494_CDKN2A.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb",
-    )
-    sac.calculate_residue_metrics()
-    interaction, non_interaction = sac.calculate_delta_metrics()
-    print(f"Interaction: {interaction}, Non-interaction: {non_interaction}")

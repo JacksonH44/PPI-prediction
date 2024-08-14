@@ -70,7 +70,7 @@ def run_colabfold_script(
     files = df["file"].to_list()
     logging.debug(files)
     input_path = os.path.join(msa_dir, str(batch_number))
-    
+
     # Just remove the directory of MSAs if it's already there, a little redundant
     # but it avoids error
     shutil.rmtree(input_path)

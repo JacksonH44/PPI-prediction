@@ -3,7 +3,8 @@ import subprocess
 
 import pandas as pd
 
-from feature_calculator import FeatureCalculator  # type: ignore
+from src.features.feature_calculator import FeatureCalculator  # type: ignore
+
 
 class FrustrationCalculator(FeatureCalculator):
     """
@@ -34,27 +35,20 @@ class FrustrationCalculator(FeatureCalculator):
         list[float]
             A list of residue-level frustration index values
         """
-        subprocess.run([
-            "Rscript",
-            'src/features/compute_frustration.R',
-            pdb_file,
-            '/tmp',
-            chain
-        ], stdout=open(os.devnull, 'wb'))
+        subprocess.run(
+            ["Rscript", "src/features/compute_frustration.R", pdb_file, "/tmp", chain],
+            stdout=open(os.devnull, "wb"),
+        )
         # Get just the file name from the pdb file path
-        pdb_file_name = pdb_file.split('/')[-1].rstrip('.pdb')
+        pdb_file_name = pdb_file.split("/")[-1].rstrip(".pdb")
         output_file = os.path.join(
-            '/tmp',
-            pdb_file_name + '_' + chain + '.done',
-            'FrustrationData',
-            pdb_file_name + '_' + chain + '.pdb_singleresidue'
+            "/tmp",
+            pdb_file_name + "_" + chain + ".done",
+            "FrustrationData",
+            pdb_file_name + "_" + chain + ".pdb_singleresidue",
         )
-        frst_df = pd.read_csv(
-            output_file,
-            sep=' ',
-            usecols=['FrstIndex']
-        )
-        return frst_df['FrstIndex'].to_list()
+        frst_df = pd.read_csv(output_file, sep=" ", usecols=["FrstIndex"])
+        return frst_df["FrstIndex"].to_list()
 
     def _calculate_residue_metrics(self):
         """
@@ -65,19 +59,8 @@ class FrustrationCalculator(FeatureCalculator):
             "A" if self._monomer_symbol == self._complex_symbol.split("_")[0] else "B"
         )
         self._multimer_residue_metrics = self._get_frst_index(
-            self._multimer_pdb_path, 
-            multimer_chain_no
+            self._multimer_pdb_path, multimer_chain_no
         )
         self._monomer_residue_metrics = self._get_frst_index(
-            self._monomer_pdb_path,
-            'A'
+            self._monomer_pdb_path, "A"
         )
-
-if __name__ == "__main__":
-    fc = FrustrationCalculator(
-        "tests/test_data/colabfold/0/CDKN2A_CYCS.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_5_seed_000.pdb",
-        "tests/test_data/colabfold/monomer/ENST00000304494_CDKN2A/ENST00000304494_CDKN2A.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb",
-    )
-    fc.calculate_residue_metrics()
-    interaction, non_interaction = fc.calculate_delta_metrics()
-    print(f"Interaction: {interaction}, Non-interaction: {non_interaction}")
