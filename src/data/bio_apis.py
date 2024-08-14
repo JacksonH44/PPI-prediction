@@ -8,7 +8,7 @@ import os
 import requests
 import sys
 
-import aiohttp
+import aiohttp  # type: ignore
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from core import config as cfg
@@ -192,7 +192,8 @@ async def get_interactors(
     )
     inter_species_excluded = "true" if not relax_evidence else "false"
     throughput_level = "low" if not relax_evidence else "any"
-    params = {
+    ParamsType = dict[str, str | int]
+    params: ParamsType = {
         "accesskey": cfg.BIOGRID_API_KEY,
         "format": "json",
         "geneList": "|".join(gene_list),
