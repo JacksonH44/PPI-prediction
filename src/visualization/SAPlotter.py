@@ -17,6 +17,15 @@ from src.visualization.Plotter import Plotter
 class SAPlotter(Plotter):
     """
     Plot the difference in change in surface areas.
+
+    Usage
+    -----
+    sap = SAPlotter(
+        'data/processed/negative_ppis.csv',
+        'data/processed/colabfold_stats.csv'
+    )
+    sap.plot('reports/figures/confidence.svg')
+    sap.plot_biggest_sa_change('reports/figures/gene_sa.svg')
     """
 
     def __init__(self, negative_ppi_file_path: str, stats_file_path: str):

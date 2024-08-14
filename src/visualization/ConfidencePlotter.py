@@ -15,6 +15,14 @@ from src.visualization.Plotter import Plotter
 class ConfidencePlotter(Plotter):
     """
     Plot the difference in AF-M pLDDT scores.
+
+    Usage
+    -----
+    cp = ConfidencePlotter(
+        'data/processed/negative_ppis.csv',
+        'data/processed/colabfold_stats.csv'
+    )
+    cp.plot('reports/figures/confidence.svg')
     """
 
     def __init__(self, negative_ppi_file_path: str, stats_file_path: str):

@@ -20,6 +20,15 @@ class LengthPlotter(Plotter):
     ----------
     _length_file_path : str
         The name of the path to which the complex lengths are stored.
+
+    Usage
+    -----
+    lp = ConfidencePlotter(
+        'data/processed/negative_ppis.csv',
+        'data/processed/colabfold_stats.csv',
+        'data/interim/sequence_lengths.csv'
+    )
+    cp.plot('reports/figures/confidence.svg')
     """
 
     def __init__(
