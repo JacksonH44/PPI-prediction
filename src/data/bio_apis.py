@@ -192,8 +192,7 @@ async def get_interactors(
     )
     inter_species_excluded = "true" if not relax_evidence else "false"
     throughput_level = "low" if not relax_evidence else "any"
-    ParamsType = dict[str, str | int]
-    params: ParamsType = {
+    params = {
         "accesskey": cfg.BIOGRID_API_KEY,
         "format": "json",
         "geneList": "|".join(gene_list),
