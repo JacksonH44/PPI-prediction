@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import logging
 import os
 from typing import Optional
 
@@ -175,7 +174,7 @@ class FeatureCalculator(ABC):
             print(
                 "Calculate the residue-level metric before applying the interaction site mask"
             )
-            return
+            return None
         symbol_mask = self._mask_map[self._monomer_symbol]
         interaction_site = [
             residue_metrics[i] for i in range(len(residue_metrics)) if symbol_mask[i]
@@ -194,7 +193,6 @@ class FeatureCalculator(ABC):
         to self._multimer_residue_metrics and self._monomer_residue_metrics
         """
 
-
     def calculate_residue_metrics(self):
         """
         Calculate per-residue level features, then split the features
@@ -209,7 +207,6 @@ class FeatureCalculator(ABC):
             self._apply_residue_mask(self._monomer_residue_metrics)
         )
 
-    
     def calculate_delta_metrics(self) -> tuple[float, float]:
         """
         Return the average difference in the multimer metric and the monomer metric
@@ -220,6 +217,12 @@ class FeatureCalculator(ABC):
             The difference in average metric between multimer and monomer for the interaction site,
             non-interaction site
         """
+        assert (
+            self._monomer_interaction_site is not None
+            and self._multimer_interaction_site is not None
+            and self._multimer_non_interaction_site is not None
+            and self._monomer_non_interaction_site is not None
+        ), "Interaction site splits should not have None type"
         assert len(self._monomer_interaction_site) == len(
             self._multimer_interaction_site
         ), "The lengths of monomer and multimer residue interaction site should be the same"
@@ -227,19 +230,16 @@ class FeatureCalculator(ABC):
             self._multimer_non_interaction_site
         ), "The lengths of monomer and multimer residue interaction site should be the same"
         interaction_delta = round(
-            (sum(self._multimer_interaction_site) - sum(self._monomer_interaction_site)) / len(self._monomer_interaction_site), 4
+            (sum(self._multimer_interaction_site) - sum(self._monomer_interaction_site))
+            / len(self._monomer_interaction_site) if len(self._monomer_interaction_site) != 0 else 0,
+            4,
         )
         non_interaction_delta = round(
-            (sum(self._multimer_non_interaction_site) - sum(self._monomer_non_interaction_site)) / len(self._monomer_non_interaction_site), 4
+            (
+                sum(self._multimer_non_interaction_site)
+                - sum(self._monomer_non_interaction_site)
+            )
+            / len(self._monomer_non_interaction_site),
+            4,
         )
         return (interaction_delta, non_interaction_delta)
-
-
-if __name__ == "__main__":
-    fc = FeatureCalculator(
-        "tests/test_data/colabfold/0/CDKN2A_CYCS.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_5_seed_000.pdb",
-        "tests/test_data/colabfold/monomer/ENST00000304494_CDKN2A/ENST00000304494_CDKN2A.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb",
-    )
-    print(fc._contact_map)
-    print(fc._mask_map)
-    print(fc._seq_1_length)
