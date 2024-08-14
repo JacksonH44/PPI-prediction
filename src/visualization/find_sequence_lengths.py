@@ -13,7 +13,7 @@ import os
 import sys
 
 import aiohttp
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 import pandas as pd
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))

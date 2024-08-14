@@ -100,7 +100,10 @@ class Plotter(ABC):
             raise TypeError("Plotter data cannot be of type None")
         elif self._pairs is None:
             raise TypeError(
-                "Plotter statistical analysis pairs cannot be of type None. If you do not wish to analyze any pairs please pass an empty list as this argument."
+                (
+                    "Plotter statistical analysis pairs cannot be of type None. ",
+                    "If you do not wish to analyze any pairs please pass an empty list as this argument.",
+                )
             )
         if self._title is None:
             self._title = ""

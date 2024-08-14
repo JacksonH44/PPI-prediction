@@ -53,10 +53,3 @@ class ConfidencePlotter(Plotter):
             "Interaction (+)": "#36F1CD",
             "No Interaction (-)": "#D770C7",
         }
-
-
-if __name__ == "__main__":
-    cp = ConfidencePlotter(
-        "data/processed/negative_ppis.csv", "data/processed/colabfold_stats.csv"
-    )
-    cp.plot("data/processed/confidence.svg")

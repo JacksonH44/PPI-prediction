@@ -66,10 +66,3 @@ class FrustrationPlotter(Plotter):
             "Partner (+)": "#36F1CD",
             "Partner (-)": "#D770C7",
         }
-
-
-if __name__ == "__main__":
-    sap = FrustrationPlotter(
-        "data/processed/negative_ppis.csv", "data/processed/colabfold_stats.csv"
-    )
-    sap.plot("data/processed/frustration.svg")

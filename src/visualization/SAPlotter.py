@@ -141,10 +141,3 @@ class SAPlotter(Plotter):
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.savefig(save_path, transparent=True)
-
-
-if __name__ == "__main__":
-    sap = SAPlotter(
-        "data/processed/negative_ppis.csv", "data/processed/colabfold_stats.csv"
-    )
-    sap.plot_biggest_sa_change("data/processed/gene_sa.svg")
