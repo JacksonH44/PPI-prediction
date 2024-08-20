@@ -89,7 +89,7 @@ def remove_ground_truth_data(
         reference_file_path,
         sheet_name=sheet_name,
         usecols=[column_name],
-        engine="calamine",
+        engine="openpyxl",
     )
     ground_truth_gene_set = set(ground_truth_genes_df[column_name])
     return [gene for gene in genes if gene not in ground_truth_gene_set]
