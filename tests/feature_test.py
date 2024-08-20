@@ -16,18 +16,18 @@ from src.features.surface_area_calculator import SurfaceAreaCalculator
 
 
 multimer_pdb_path = os.path.join(
-    'tests',
-    'test_data',
-    'colabfold',
-    '0',
-    'CDKN2A_TRAPPC2L.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_2_seed_000.pdb',
+    "tests",
+    "test_data",
+    "colabfold",
+    "0",
+    "CDKN2A_TRAPPC2L.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_2_seed_000.pdb",
 )
 monomer_pdb_path = os.path.join(
-    'tests',
-    'test_data',
-    'colabfold',
-    'monomer',
-    'ENST00000304494_CDKN2A.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb'
+    "tests",
+    "test_data",
+    "colabfold",
+    "monomer",
+    "ENST00000304494_CDKN2A.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb",
 )
 
 
@@ -54,10 +54,7 @@ def expected_result(var: str):
 def test_calculate_delta_metrics_success():
     """Test that the delta calculation (difference in monomer and multimer)
     is correct."""
-    sac = SurfaceAreaCalculator(
-        multimer_pdb_path,
-        monomer_pdb_path
-    )
+    sac = SurfaceAreaCalculator(multimer_pdb_path, monomer_pdb_path)
     sac.calculate_residue_metrics()
     deltas = sac.calculate_delta_metrics()
     assert deltas == (-38.9749, -4.1072)
@@ -82,8 +79,8 @@ def test_surface_area_stats_success():
     ]
     actual_result = find_stats(
         "CDKN2A_CYCS",
-        "tests/test_data/colabfold/0",
-        "tests/test_data/colabfold/monomer",
+        os.path.join("tests", "test_data", "colabfold", "0"),
+        os.path.join("tests", "test_data", "colabfold", "monomer"),
         "surface_area",
         5,
     )
@@ -106,7 +103,7 @@ def test_get_colabfold_metrics_success():
         "0.12",
     ]
     actual_result = get_colabfold_metrics(
-        "CDKN2A_TRAPPC2L", "tests/test_data/colabfold/0/"
+        "CDKN2A_TRAPPC2L", os.path.join("tests", "test_data", "colabfold", "0")
     )
     assert expected_result == actual_result
 
@@ -114,10 +111,7 @@ def test_get_colabfold_metrics_success():
 def test_apply_residue_mask_success():
     """Test that a tuple of interaction site surface areas and non-interaction site
     surface areas is correctly returned."""
-    sac = SurfaceAreaCalculator(
-        multimer_pdb_path,
-        monomer_pdb_path
-    )
+    sac = SurfaceAreaCalculator(multimer_pdb_path, monomer_pdb_path)
     sac.calculate_residue_metrics()
     expected_result = ([], [4.7823, 1.1008, 0.8923, 2.1129])
     actual_result = sac._apply_residue_mask([4.7823, 1.1008, 0.8923, 2.1129])
@@ -133,10 +127,7 @@ def test_apply_residue_mask_success():
 )
 def test_calculate_residue_metrics_success(result_type, expected_result_variable):
     """Test that monomer and multimer residue metrics are calculated correctly."""
-    sac = SurfaceAreaCalculator(
-        multimer_pdb_path,
-        monomer_pdb_path
-    )
+    sac = SurfaceAreaCalculator(multimer_pdb_path, monomer_pdb_path)
     sac.calculate_residue_metrics()
     actual_output = sac._monomer_residue_metrics
     if result_type == "multimer":
@@ -146,20 +137,14 @@ def test_calculate_residue_metrics_success(result_type, expected_result_variable
 
 def test_create_interaction_site_success():
     """Test that a FeatureCalculator object accurately creates a mask map."""
-    sac = SurfaceAreaCalculator(
-        multimer_pdb_path,
-        monomer_pdb_path
-    )
+    sac = SurfaceAreaCalculator(multimer_pdb_path, monomer_pdb_path)
     assert sac._mask_map == expected_result("test_create_interaction_site")
 
 
 def test_create_length_split_success():
     """Test that the proper length split is created upon the creation
     of a FeatureCalculator object."""
-    sac = SurfaceAreaCalculator(
-        multimer_pdb_path,
-        monomer_pdb_path
-    )
+    sac = SurfaceAreaCalculator(multimer_pdb_path, monomer_pdb_path)
     assert sac._seq_1_length == 156 and sac._seq_2_length == 139
 
 
@@ -184,7 +169,9 @@ def test_find_all_complexes_success():
     expected_result = set(
         ["CDKN2A_TRAPPC2L", "CDKN2C_CD24", "SRSF3_GGTA1", "CDKN2A_CYCS"]
     )
-    actual_result = set(find_all_complexes("tests/test_data/colabfold/0"))
+    actual_result = set(
+        find_all_complexes(os.path.join("tests", "test_data", "colabfold", "0"))
+    )
     assert actual_result == expected_result
 
 
@@ -197,7 +184,9 @@ def test_create_observations_success():
         "batch_number": [2, 2, 2, 2],
     }
     expected_result = pd.DataFrame(data=data)
-    actual_result = create_observations("data/interim/sequence_lengths.csv", 2)
+    actual_result = create_observations(
+        os.path.join("data", "interim", "sequence_lengths.csv"), 2
+    )
     actual_result = actual_result.reset_index(drop=True)
     expected_result = expected_result.reset_index(drop=True)
     assert expected_result.equals(actual_result)
@@ -206,19 +195,27 @@ def test_create_observations_success():
 def test_find_msa_success():
     """Test that a desired MSA is able to be found."""
     expected_result = "ENST00000586790_CCDC106.msa.a3m"
-    actual_result = find_msa("CCDC106", "tests/test_data/msas")
+    actual_result = find_msa("CCDC106", os.path.join("tests", "test_data", "msas"))
     assert expected_result == actual_result
 
 
 @pytest.mark.parametrize(
     "input, expected_output",
     [
-        ("CCDC106", "tests/test_data/msas/ENST00000586790_CCDC106.msa.a3m"),
-        ("ABI1_ENAH", "tests/test_data/msas/multimer/ABI1_ENAH.msa.a3m"),
+        (
+            "CCDC106",
+            os.path.join(
+                "tests", "test_data", "msas", "ENST00000586790_CCDC106.msa.a3m"
+            ),
+        ),
+        (
+            "ABI1_ENAH",
+            os.path.join("tests", "test_data", "msas", "multimer", "ABI1_ENAH.msa.a3m"),
+        ),
     ],
 )
 def test_prep_msas_success(input, expected_output):
     """Test that MSA files are created and placed in the
     correct directory."""
-    actual_output = prep_msas(input, "tests/test_data/msas")
+    actual_output = prep_msas(input, os.path.join("tests", "test_data", "msas"))
     assert expected_output == actual_output
