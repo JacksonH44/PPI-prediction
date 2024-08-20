@@ -73,7 +73,8 @@ def run_colabfold_script(
 
     # Just remove the directory of MSAs if it's already there, a little redundant
     # but it avoids error
-    shutil.rmtree(input_path)
+    if os.path.exists(input_path):
+        shutil.rmtree(input_path)
     os.makedirs(input_path, exist_ok=True)
     for msa_file in files:
         shutil.move(os.path.join(msa_dir, msa_file), input_path)
