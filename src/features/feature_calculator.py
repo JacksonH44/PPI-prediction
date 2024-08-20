@@ -84,7 +84,7 @@ class FeatureCalculator(ABC):
             sequence length
         """
         msa_file = os.path.join(
-            os.path.dirname(self._multimer_pdb_path), self._complex_symbol + ".msa.a3m"
+            os.path.dirname(self._multimer_pdb_path), f'{self._complex_symbol}.msa.a3m'
         )
         try:
             with open(msa_file, "r") as msa:

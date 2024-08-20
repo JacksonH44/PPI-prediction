@@ -3,6 +3,7 @@ A test file for functions in the src/features directory.
 """
 
 import pytest
+import os
 import yaml
 
 import pandas as pd
@@ -14,13 +15,19 @@ from src.features.run_colabfold import create_observations, find_msa, prep_msas
 from src.features.surface_area_calculator import SurfaceAreaCalculator
 
 
-multimer_pdb_path = (
-    'tests/test_data/colabfold/0/CDKN2A_TRAPPC2L'
-    '.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_2_seed_000.pdb'
+multimer_pdb_path = os.path.join(
+    'tests',
+    'test_data',
+    'colabfold',
+    '0',
+    'CDKN2A_TRAPPC2L.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_2_seed_000.pdb',
 )
-monomer_pdb_path = (
-    'tests/test_data/colabfold/monomer/ENST00000304494_CDKN2A'
-    '.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb'
+monomer_pdb_path = os.path.join(
+    'tests',
+    'test_data',
+    'colabfold',
+    'monomer',
+    'ENST00000304494_CDKN2A.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb'
 )
 
 
