@@ -9,6 +9,7 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from src.features.file_utils import find_pdb_files
+from src.features.feature_calculator import FeatureCalculator
 from src.features.frustration_calculator import FrustrationCalculator
 from src.features.surface_area_calculator import SurfaceAreaCalculator
 
@@ -96,11 +97,10 @@ def find_stats(
             file_args.append(
                 [absolute_multimer_pdb_path, absolute_monomer_pdb_path, feature_type]
             )
-            if feature_type == "surface_area":
-                fc = SurfaceAreaCalculator(
-                    absolute_multimer_pdb_path, absolute_monomer_pdb_path
-                )
-            elif feature_type == "frustration":
+            fc: FeatureCalculator = SurfaceAreaCalculator(
+                absolute_multimer_pdb_path, absolute_monomer_pdb_path
+            )
+            if feature_type == "frustration":
                 fc = FrustrationCalculator(
                     absolute_multimer_pdb_path, absolute_monomer_pdb_path
                 )
@@ -131,9 +131,9 @@ def find_stats(
 
 if __name__ == "__main__":
     features = find_stats(
-        "TP53_TTC23",
-        "/cluster/projects/kumargroup/jackson/colabfold/376",
-        "/cluster/projects/kumargroup/jackson/colabfold/monomer",
+        "CDKN2A_CYCS",
+        "tests/test_data/colabfold/0",
+        "tests/test_data/colabfold/monomer",
         "surface_area",
         5,
     )

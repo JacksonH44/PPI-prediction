@@ -84,7 +84,7 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
     return pdb_list
 
 
-def combine_csv(data_dir: str, upper_bound: str) -> None:
+def combine_csv(data_dir: str, upper_bound: int) -> None:
     """
     Combine multiple CSVs into one CSV, assuming they all have
     the same headers. It also assumes that the CSVs are labeled
