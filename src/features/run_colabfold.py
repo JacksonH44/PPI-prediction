@@ -39,14 +39,14 @@ def prep_msas(symbol: str, msa_dir: str) -> str:
         logging.debug(f"Prepping MSA for {symbol}...")
         protein_a, protein_b = symbol.split("_")
         msa_a, msa_b = find_msa(protein_a, msa_dir), find_msa(protein_b, msa_dir)
-        sequences_a = extract_header_sequence_pairs(f"{msa_dir}/{msa_a}")
-        sequences_b = extract_header_sequence_pairs(f"{msa_dir}/{msa_b}")
-        combined_msa_path = f"{msa_dir}/multimer/{symbol}.msa.a3m"
+        sequences_a = extract_header_sequence_pairs(os.path.join(msa_dir, msa_a))
+        sequences_b = extract_header_sequence_pairs(os.path.join(msa_dir, msa_b))
+        combined_msa_path = os.path.join(msa_dir, 'multimer', f'{symbol}.msa.a3m')
         write_combined_a3m(sequences_a, sequences_b, combined_msa_path)
         return combined_msa_path
     else:  # monomer
         msa = find_msa(symbol, msa_dir)
-        return f"{msa_dir}/{msa}"
+        return os.path.join(msa_dir, msa)
 
 
 def create_observations(filepath, batch_number) -> pd.DataFrame:
@@ -68,7 +68,12 @@ def run_colabfold_script(
     df["file"] = df["symbol"].apply(lambda symbol: prep_msas(symbol, msa_dir))
     logging.debug(df.head(5))
     files = df["file"].to_list()
+    logging.debug(files)
     input_path = os.path.join(msa_dir, str(batch_number))
+
+    # Just remove the directory of MSAs if it's already there, a little redundant
+    # but it avoids error
+    shutil.rmtree(input_path)
     os.makedirs(input_path, exist_ok=True)
     for msa_file in files:
         shutil.move(os.path.join(msa_dir, msa_file), input_path)

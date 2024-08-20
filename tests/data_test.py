@@ -43,7 +43,9 @@ async def test_find_too_long_proteins_success():
     (>2,000 AAs) to combine with a gene of interest is
     correct."""
     location_df = pd.read_csv(
-        "tests/test_data/subcellular_location_test.csv", sep="\t", usecols=["Gene name"]
+        os.path.join("tests", "test_data", "subcellular_location_test.csv"),
+        sep="\t",
+        usecols=["Gene name"],
     )
     genes = ["ZFHX3", "PREX2", "MTCP1"]
     expected_output = {
@@ -95,7 +97,9 @@ def test_extract_header_sequence_pairs_success():
         "ENST00000546591|RPL41": "MRAKWRKKRMRRLKRKRRKMRQRSK",
         "UniRef100_C8Z6C0": "MRAKWRKKKTRRLKRKRRKVRARSK",
     }
-    actual_output = extract_header_sequence_pairs("tests/test_data/test_msa.a3m")
+    actual_output = extract_header_sequence_pairs(
+        os.path.join("tests", "test_data", "test_msa.a3m")
+    )
     assert actual_output == expected_output
 
 
@@ -175,8 +179,8 @@ def test_find_unique_genes_success():
     # because that is sufficient for our testing purposes
     actual_result = find_unique_genes(
         [
-            "tests/test_data/positive_ppis_test.csv",
-            "tests/test_data/positive_ppis_test.csv",
+            os.path.join("tests", "test_data", "positive_ppis_test.csv"),
+            os.path.join("tests", "test_data", "positive_ppis_test.csv"),
         ]
     )
     expected_result = {
@@ -212,7 +216,12 @@ def test_count_gene_symbols_error():
 
 @pytest.mark.parametrize(
     "positive_ppis, expected_result",
-    [("tests/test_data/positive_ppis_test.csv", {"ABI1": 4, "ABL1": 2, "AR": 3})],
+    [
+        (
+            os.path.join("tests", "test_data", "positive_ppis_test.csv"),
+            {"ABI1": 4, "ABL1": 2, "AR": 3},
+        )
+    ],
 )
 def test_count_gene_symbols_success(positive_ppis, expected_result):
     """Test the happy path for counting gene symbols
@@ -341,8 +350,8 @@ def test_get_locations_success():
     }
     expected_result = pd.DataFrame(data=expected_data)
     actual_result = get_locations(
-        "tests/test_data/MANE_summary_v3_test.csv",
-        "tests/test_data/subcellular_location_test.csv",
+        os.path.join("tests", "test_data", "MANE_summary_v3_test.csv"),
+        os.path.join("tests", "test_data", "subcellular_location_test.csv"),
     )
     assert expected_result.equals(actual_result)
 
@@ -354,7 +363,7 @@ def test_remove_ground_truth_data_success():
     expected_output = ["FANCE", "BRCA1"]
     actual_output = remove_ground_truth_data(
         unpruned_genes,
-        "tests/test_data/isoform_sequences_test.xlsx",
+        os.path.join("tests", "test_data", "isoform_sequences_test.xlsx"),
         "1A-Gene List",
         "Gene_Symbol",
     )
@@ -371,7 +380,7 @@ def test_chunk_input_genes_success():
 
 
 @pytest.mark.parametrize(
-    "infile", [("tests/test_data/cancer_driver_gene_list_test.csv")]
+    "infile", [(os.path.join("tests", "test_data", "cancer_driver_gene_list_test.csv"))]
 )
 def test_parse_input_genes_success(infile):
     """Test the generation of reference gene list for PPI pairs."""
@@ -460,7 +469,7 @@ async def test_get_interactors_success(
     "test_file_path, expected_data, positive",
     [
         (
-            "tests/test_data/ppis_test1.xlsx",
+            os.path.join("tests", "test_data", "ppis_test1.xlsx"),
             {
                 "ref_ID": [
                     "ACTN4_1",
@@ -484,7 +493,7 @@ async def test_get_interactors_success(
             False,
         ),
         (
-            "tests/test_data/ppis_test2.xlsx",
+            os.path.join("tests", "test_data", "ppis_test2.xlsx"),
             {
                 "ref_ID": [
                     "BCL2L1_1",
@@ -510,7 +519,7 @@ async def test_get_interactors_success(
             True,
         ),
         (
-            "tests/test_data/ppis_test3.xlsx",
+            os.path.join("tests", "test_data", "ppis_test3.xlsx"),
             {
                 "ref_ID": ["CLCN2_1", "CLCN2_1", "CLCN2_1", "CLCN2_1", "CLCN2_1"],
                 "alt_ID": ["CLCN2_2", "CLCN2_3", "CLCN2_4", "CLCN2_4", "CLCN2_5"],
@@ -532,7 +541,7 @@ def test_find_triplets_success(test_file_path, expected_data, positive):
 def test_process_file_error():
     """Error handling test for a file that doesn't exist."""
     with pytest.raises(FileNotFoundError):
-        actual_fname, actual_seq = process_file("../data/nonexistent.txt")
+        _, _ = process_file("../data/nonexistent.txt")
 
 
 def test_process_file_success():
@@ -542,7 +551,9 @@ def test_process_file_success():
     expected_sequence = """MEDLGENTMVLSTLRSLNNFISQRVEGGSGLDISTSAPGSLQMQYQQSMQREVDRNQELL
 TRIRQLQEREAGAEEKMQEQLERNRQCQQNLDAASKRLREKEDSLAQAGETINALKGRIS
 ELQWSVMDQEMRVKRLESEKQELQ"""
-    actual_headers, actual_sequences = process_file("tests/test_data/test_gene1.txt")
+    actual_headers, actual_sequences = process_file(
+        os.path.join("tests", "test_data", "test_gene1.txt")
+    )
     assert (
         actual_headers[1] == expected_header
         and actual_sequences[1] == expected_sequence
