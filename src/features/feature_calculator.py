@@ -48,9 +48,9 @@ class FeatureCalculator(ABC):
         """
         self._multimer_pdb_path = multimer_pdb_path
         self._monomer_pdb_path = monomer_pdb_path
-        self._complex_symbol = self._multimer_pdb_path.split("/")[-1].split(".")[0]
+        self._complex_symbol = os.path.basename(self._multimer_pdb_path).split(".")[0]
         self._monomer_symbol = (
-            self._monomer_pdb_path.split("/")[-1].split(".")[0].split("_")[-1]
+            os.path.basename(self._monomer_pdb_path).split(".")[0].split("_")[-1]
         )
         self._create_length_split()
         self._create_contact_map()
