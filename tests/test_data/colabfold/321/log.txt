@@ -1,0 +1,8 @@
+2024-07-23 22:17:28,824 Running colabfold 1.5.5 (1648d2335943f9a483b6a803ebaea3e76162c788)
+2024-07-23 22:17:30,263 Running on GPU
+2024-07-23 22:17:31,310 Found 5 citations for tools or databases
+2024-07-23 22:17:31,312 Skipping RXRA_CTSB.msa (already done)
+2024-07-23 22:17:31,313 Skipping ESR1_MGMT.msa (already done)
+2024-07-23 22:17:31,315 Skipping MYOD1_HDAC1.msa (already done)
+2024-07-23 22:17:31,316 Skipping SMARCE1_DPF2.msa (already done)
+2024-07-23 22:17:31,316 Done
