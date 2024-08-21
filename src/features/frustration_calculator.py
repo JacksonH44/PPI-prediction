@@ -72,7 +72,8 @@ if __name__ == '__main__':
     fc = FrustrationCalculator(
         ('tests/test_data/colabfold/321/SMARCE1_DPF2'
          '.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb'),
-        ('tests/test_data/colabfold/monomer/ENST00000528416_DPF2.msa_unrelaxed_rank_001_alphafold2_ptm_model_1_seed_000.pdb')
+        ('tests/test_data/colabfold/monomer/ENST00000528416_DPF2'
+         '.msa_unrelaxed_rank_001_alphafold2_ptm_model_1_seed_000.pdb')
     )
     fc.calculate_residue_metrics()
     deltas = fc.calculate_delta_metrics()
