@@ -131,8 +131,8 @@ def find_stats(
 
 if __name__ == "__main__":
     features = find_stats(
-        "CDKN2A_CYCS",
-        "tests/test_data/colabfold/0",
+        "SMARCE1_DPF2",
+        "tests/test_data/colabfold/321",
         "tests/test_data/colabfold/monomer",
         "surface_area",
         5,
