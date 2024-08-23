@@ -14,8 +14,25 @@ from src.data.data_processing import map_symbols_to_transcripts
 async def filter_out_long_sequences(
     session: aiohttp.ClientSession, ppis: list[str]
 ) -> list[str]:
-    """Filter out sequences that make a protein
-    pair greater than 2000 amino acids"""
+    """
+    Filter out sequences that make a protein
+    pair greater than 2000 amino acids.
+    
+    Parameters
+    ----------
+    session : aiohttp.ClientSession
+        The Session object that holds the context in which this function is called
+        asynchronously
+    ppis : list[str]
+        A list of protein-protein interactions (PPIs) from which long sequences
+        need to be filtered out from
+    
+    Returns
+    -------
+    filtered_ppis : list[str]
+        The input PPI list with all PPIs with total sequence greater than 2,000 amino
+        acids filtered out
+    """
     ppi_symbols = []
     for ppi in ppis:
         symbol_a, symbol_b = ppi.split("*")
