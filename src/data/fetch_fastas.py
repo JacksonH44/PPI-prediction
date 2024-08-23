@@ -11,7 +11,7 @@ import sys
 
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from core import config as cfg
 
 API_KEY = cfg.NCBI_API_KEY
@@ -96,7 +96,7 @@ def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/fetch_fastas.log")
+        else os.path.join(os.getcwd(), os.path.join("logs", "fetch_fastas.log"))
     )
     if not os.path.exists(logfile):
         with open(logfile, "w") as file:

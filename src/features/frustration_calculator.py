@@ -4,13 +4,34 @@ import sys
 
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.features.feature_calculator import FeatureCalculator  # type: ignore
 
 
 class FrustrationCalculator(FeatureCalculator):
     """
     Calculate the frustration index of a given complex
+
+    Usage
+    -----
+    fc = FrustrationCalculator(
+        os.path.join(
+            'tests',
+            'test_data',
+            'colabfold',
+            '321',
+            'SMARCE1_DPF2.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb'
+        ),
+        os.path.join(
+            'tests',
+            'test_data',
+            'colabfold',
+            'monomer',
+            'ENST00000528416_DPF2.msa_unrelaxed_rank_001_alphafold2_ptm_model_1_seed_000.pdb'
+        )
+    )
+    fc.calculate_residue_metrics()
+    deltas = fc.calculate_delta_metrics()
     """
 
     def __init__(self, multimer_pdb_path: str, monomer_pdb_path: str):
@@ -37,17 +58,24 @@ class FrustrationCalculator(FeatureCalculator):
         list[float]
             A list of residue-level frustration index values
         """
+        tmp_path = os.path.abspath("/tmp")
         subprocess.run(
-            ["Rscript", "src/features/compute_frustration.R", pdb_file, "/tmp", chain],
+            [
+                "Rscript",
+                os.path.join("src", "features", "compute_frustration.R"),
+                pdb_file,
+                tmp_path,
+                chain,
+            ],
             stdout=open(os.devnull, "wb"),
         )
         # Get just the file name from the pdb file path
-        pdb_file_name = pdb_file.split("/")[-1].rstrip(".pdb")
+        pdb_file_name = os.path.basename(pdb_file).rstrip(".pdb")
         output_file = os.path.join(
-            "/tmp",
-            pdb_file_name + "_" + chain + ".done",
+            tmp_path,
+            f"{pdb_file_name}_{chain}.done",
             "FrustrationData",
-            pdb_file_name + "_" + chain + ".pdb_singleresidue",
+            f"{pdb_file_name}_{chain}.pdb_singleresidue",
         )
         frst_df = pd.read_csv(output_file, sep=" ", usecols=["FrstIndex"])
         return frst_df["FrstIndex"].to_list()
@@ -66,15 +94,3 @@ class FrustrationCalculator(FeatureCalculator):
         self._monomer_residue_metrics = self._get_frst_index(
             self._monomer_pdb_path, "A"
         )
-
-
-if __name__ == '__main__':
-    fc = FrustrationCalculator(
-        ('tests/test_data/colabfold/321/SMARCE1_DPF2'
-         '.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb'),
-        ('tests/test_data/colabfold/monomer/ENST00000528416_DPF2'
-         '.msa_unrelaxed_rank_001_alphafold2_ptm_model_1_seed_000.pdb')
-    )
-    fc.calculate_residue_metrics()
-    deltas = fc.calculate_delta_metrics()
-    print(deltas)

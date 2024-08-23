@@ -84,7 +84,7 @@ def find_pdb_files(batch_path: str, num_models: int = 1) -> list[str]:
     return pdb_list
 
 
-def combine_csv(data_dir: str, upper_bound: int) -> None:
+def combine_csv(data_dir: str, output_dir: str, upper_bound: int) -> None:
     """
     Combine multiple CSVs into one CSV, assuming they all have
     the same headers. It also assumes that the CSVs are labeled
@@ -95,6 +95,8 @@ def combine_csv(data_dir: str, upper_bound: int) -> None:
     ----------
     data_dir : str
         The path to the directory holding all the intermediate CSVs
+    output_dir : str
+        The path to the desired output directory
     upper_bound : str
         The largest number x for which the file colabfold_stats_x.csv
         exists for
@@ -106,4 +108,4 @@ def combine_csv(data_dir: str, upper_bound: int) -> None:
         dfs.append(file_df)
 
     combined_df = pd.concat(dfs, ignore_index=True)
-    combined_df.to_csv("data/processed/colabfold_stats.csv", index=False)
+    combined_df.to_csv(output_dir, index=False)

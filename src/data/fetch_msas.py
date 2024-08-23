@@ -11,7 +11,7 @@ import sys
 
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from core import config as cfg
 from src.data.data_processing import find_unique_genes
 
@@ -45,7 +45,7 @@ def parse_command_line():  # pragma: no cover
         "-o",
         "--outfile",
         type=str,
-        default="data/processed/negative_ppis.csv",
+        default=os.path.join("data", "processed", "negative_ppis.csv"),
         help="Path to output file to store negative PPI datset",
     )
     parser.add_argument(
@@ -71,7 +71,7 @@ def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/fetch_msas.log")
+        else os.path.join(os.getcwd(), os.path.join("logs", "fetch_msas.log"))
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
@@ -83,7 +83,8 @@ def main():  # pragma: no cover
     logging.debug(f"Found {len(all_genes)} unique genes...")
     transcripts = find_canonical_transcript(all_genes)
     # Write genes and transcripts to csv file
-    with open("data/interim/gene_transcripts.csv", "w") as file:
+    transcript_file = os.path.join("data", "interim", "gene_transcripts.csv")
+    with open(transcript_file, "w") as file:
         writer = csv.writer(file)
         for gene, transcript in transcripts.items():
             writer.writerow([gene, transcript.split(".")[0]])

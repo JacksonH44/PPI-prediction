@@ -7,7 +7,7 @@ import os
 import re
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.features.file_utils import find_pdb_files
 from src.features.feature_calculator import FeatureCalculator
 from src.features.frustration_calculator import FrustrationCalculator
@@ -52,8 +52,8 @@ def find_stats(
     -----
     find_stats(
         'CDKN2A_CYCS',
-        'tests/test_data/colabfold/0',
-        'tests/test_data/colabfold/monomer',
+        os.path.join('tests', 'test_data', 'colabfold', '0'),
+        os.path.join('tests', 'test_data', 'colabfold', 'monomer'),
         'surface_area',
         5
     )
@@ -83,7 +83,7 @@ def find_stats(
             monomer_res = [
                 pdb_file
                 for pdb_file in monomer_pdb_files
-                if re.match(monomer_pattern, pdb_file.split("/")[-1])
+                if re.match(monomer_pattern, os.path.basename(pdb_file))
             ]
             if len(monomer_res) == 1:
                 monomer_file = monomer_res[0]
@@ -127,14 +127,3 @@ def find_stats(
     features += avg_ni_sa
     str_features = [str(feat) for feat in features]
     return str_features
-
-
-if __name__ == "__main__":
-    features = find_stats(
-        "SMARCE1_DPF2",
-        "tests/test_data/colabfold/321",
-        "tests/test_data/colabfold/monomer",
-        "surface_area",
-        5,
-    )
-    print(features)

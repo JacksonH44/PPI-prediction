@@ -11,7 +11,7 @@ import sys
 
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.data.combine_msa import extract_header_sequence_pairs, write_combined_a3m
 
 
@@ -41,7 +41,7 @@ def prep_msas(symbol: str, msa_dir: str) -> str:
         msa_a, msa_b = find_msa(protein_a, msa_dir), find_msa(protein_b, msa_dir)
         sequences_a = extract_header_sequence_pairs(os.path.join(msa_dir, msa_a))
         sequences_b = extract_header_sequence_pairs(os.path.join(msa_dir, msa_b))
-        combined_msa_path = os.path.join(msa_dir, 'multimer', f'{symbol}.msa.a3m')
+        combined_msa_path = os.path.join(msa_dir, "multimer", f"{symbol}.msa.a3m")
         write_combined_a3m(sequences_a, sequences_b, combined_msa_path)
         return combined_msa_path
     else:  # monomer
@@ -93,18 +93,21 @@ def parse_command_line():  # pragma: no cover
         "-d",
         "--dataset_path",
         type=str,
-        default="data/interim/sequence_lengths.csv",
+        default=os.path.join("data", "interim", "sequence_lengths.csv"),
         help="The path to the sorted dataset",
     )
     parser.add_argument(
         "-m",
         "--msa_dir",
         type=str,
-        default="/cluster/projects/kumargroup/jackson/msas",
+        default=os.path.join("tests", "test_data", "msas"),
         help="The path to the MSA files",
     )
     parser.add_argument(
-        "-c", "--colabfold_path", type=str, default="./jobs/run_colabfold.sh"
+        "-c",
+        "--colabfold_path",
+        type=str,
+        default=os.path.join(".", "jobs", "run_colabfold.sh"),
     )
     parser.add_argument(
         "-v",
@@ -129,7 +132,7 @@ def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/run_colabfold.log")
+        else os.path.join(os.getcwd(), os.path.join("logs", "run_colabfold.log"))
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):

@@ -97,7 +97,11 @@ def main():  # pragma: no cover
     outfolder = args.outfolder
     if args.outfolder is None:
         outfolder = os.path.join(os.getcwd(), args.infile.rsplit(".", 1)[0])
-    logfile = args.logfile if args.logfile is not None else "log/fasta_one_to_many.log"
+    logfile = (
+        args.logfile
+        if args.logfile is not None
+        else os.path.join("logs", "fasta_one_to_many.log")
+    )
     logging_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(level=logging_level, filename=logfile)
     try:

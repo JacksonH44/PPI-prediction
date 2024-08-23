@@ -13,7 +13,7 @@ import sys
 import time
 import re
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.features.file_utils import find_all_complexes
 from src.features.find_stats import find_stats
 
@@ -155,7 +155,7 @@ def collect_stats(data_dir: str, monomer_dir: str, stats_file: str):
                 features += find_stats(symbol, data_dir, monomer_dir, "frustration", 5)
                 writer.writerow(features)
             except AssertionError as e:
-                print(f'Could not find features for {symbol}\n{e}')
+                print(f"Could not find features for {symbol}\n{e}")
 
 
 def parse_command_line():  # pragma : no cover
@@ -165,21 +165,21 @@ def parse_command_line():  # pragma : no cover
         "-d",
         "--data_directory",
         type=str,
-        default="tests/test_data/colabfold/0",
+        default=os.path.join("tests", "test_data", "colabfold", "0"),
         help="The path to the directory holding all finished ColabFold outputs",
     )
     parser.add_argument(
         "-m",
         "--monomer_directory",
         type=str,
-        default="tests/test_data/colabfold/monomer",
+        default=os.path.join("tests", "test_data", "colabfold", "monomer"),
         help="The path to the directory holding all monomer ColabFold outputs",
     )
     parser.add_argument(
         "-s",
         "--stats_file",
         type=str,
-        default="data/processed/colabfold_stats.csv",
+        default=os.path.join("data", "processed", "colabfold_stats.csv"),
         help="The path to the file where you wish to write the ColabFold stats",
     )
     parser.add_argument(
@@ -205,7 +205,9 @@ def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/collect_colabfold_stats.log")
+        else os.path.join(
+            os.getcwd(), os.path.join("logs", "collect_colabfold_stats.log")
+        )
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):

@@ -45,7 +45,7 @@ def expected_result(var: str):
     -------
     The expected result of the test
     """
-    with open("tests/feature_test.yml", "r") as configFile:
+    with open(os.path.join("tests", "feature_test.yml"), "r") as configFile:
         data = configFile.read()
     data = yaml.load(data, Loader=yaml.FullLoader)
     return data[var]["expected_output"]
@@ -159,7 +159,9 @@ def test_find_pdb_files_success():
             "CDKN2A_CYCS.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_5_seed_000.pdb",
         ]
     )
-    actual_result = set(find_pdb_files("tests/test_data/colabfold/0"))
+    actual_result = set(
+        find_pdb_files(os.path.join("tests", "test_data", "colabfold", "0"))
+    )
     assert actual_result == expected_result
 
 

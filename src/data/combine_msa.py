@@ -98,7 +98,7 @@ def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/combine_msa.log")
+        else os.path.join(os.getcwd(), os.path.join("logs", "combine_msa.log"))
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
