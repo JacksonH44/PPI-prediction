@@ -12,7 +12,7 @@ import time
 import aiohttp
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors
 from src.data.data_filtering import filter_out_long_sequences
@@ -27,10 +27,7 @@ from src.data.data_processing import (
 def ppi_in_MANE(ppi: str, mane_df: pd.DataFrame) -> bool:
     """Check if both of the proteins in a ppi are in the MANE summary."""
     protein_a, protein_b = ppi.split("*")
-    return (
-        (mane_df == protein_a).any().any()
-        and (mane_df == protein_b).any().any()
-    )
+    return (mane_df == protein_a).any().any() and (mane_df == protein_b).any().any()
 
 
 def parse_command_line():  # pragma: no cover
@@ -43,7 +40,7 @@ def parse_command_line():  # pragma: no cover
         "-o",
         "--outfile",
         type=str,
-        default="data/processed/positive_ppis.csv",
+        default=os.path.join("data", "processed", "positive_ppis.csv"),
         help="Output file path to write positive dataset to",
     )
     parser.add_argument(
@@ -69,7 +66,9 @@ async def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/generate_positive_dataset.log")
+        else os.path.join(
+            os.getcwd(), os.path.join("logs", "generate_positive_dataset.log")
+        )
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):

@@ -15,7 +15,7 @@ import time
 import aiohttp
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from core import config as cfg
 from src.data.bio_apis import get_interactors, get_sequence_lengths
 from src.data.data_processing import (
@@ -264,35 +264,35 @@ def parse_command_line():  # pragma: no cover
         "-g",
         "--gene_file",
         type=str,
-        default="data/raw/cancer_driver_gene_list.csv",
+        default=os.path.join("data", "raw", "cancer_driver_gene_list.csv"),
         help="Path to CSV containing genes of interest",
     )
     parser.add_argument(
         "-a",
         "--all_genes",
         type=str,
-        default="data/raw/MANE_summary_v3.csv",
+        default=os.path.join("data", "raw", "MANE_summary_v3.csv"),
         help="Path to CSV containing all genes (could be MANE file)",
     )
     parser.add_argument(
         "-c",
         "--location_file",
         type=str,
-        default="data/raw/subcellular_location.csv",
+        default=os.path.join("data", "raw", "subcellular_location.csv"),
         help="Path to TSV containing subcellular locations for all genes",
     )
     parser.add_argument(
         "-p",
         "--positive_dataset",
         type=str,
-        default="data/processed/positive_ppis.csv",
+        default=os.path.join("data", "processed", "positive_ppis.csv"),
         help="Path to CSV file fo positive PPI dataset",
     )
     parser.add_argument(
         "-o",
         "--outfile",
         type=str,
-        default="data/processed/negative_ppis.csv",
+        default=os.path.join("data", "processed", "negative_ppis.csv"),
         help="Path to output file to store negative PPI datset",
     )
     parser.add_argument(
@@ -318,7 +318,9 @@ async def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/generate_negative_dataset.log")
+        else os.path.join(
+            os.getcwd(), os.path.join("logs", "generate_negative_dataset.log")
+        )
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
