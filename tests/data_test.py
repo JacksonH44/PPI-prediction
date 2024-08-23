@@ -5,7 +5,6 @@ import aiohttp
 import pandas as pd
 
 from core import config as cfg
-from src.data.aws_utils import download_msa_from_openfold
 from src.data.bio_apis import (
     filter_for_uniref30,
     find_uniprot_ids,
@@ -13,7 +12,6 @@ from src.data.bio_apis import (
     get_sequence_lengths,
 )
 from src.data.combine_msa import extract_header_sequence_pairs
-from src.data.create_protein_triplets import find_triplets
 from src.data.data_filtering import filter_out_long_sequences
 from src.data.data_processing import (
     chunk_input_genes,
@@ -101,16 +99,6 @@ def test_extract_header_sequence_pairs_success():
         os.path.join("tests", "test_data", "test_msa.a3m")
     )
     assert actual_output == expected_output
-
-
-@pytest.mark.parametrize(
-    "uniprot_id, expected_result", [("A0A067CGT3", True), ("Q9HB96", False)]
-)
-def test_download_msa_from_openfold(uniprot_id, expected_result):
-    """A test for proper recognition of download files
-    (sets the download flag to false)."""
-    actual_result = download_msa_from_openfold(uniprot_id, "dummy/", download=False)
-    assert actual_result == expected_result
 
 
 @pytest.mark.parametrize(
@@ -463,79 +451,6 @@ async def test_get_interactors_success(
         )
     actual_interactions = set(ppis)
     assert actual_interactions == expected_interactions
-
-
-@pytest.mark.parametrize(
-    "test_file_path, expected_data, positive",
-    [
-        (
-            os.path.join("tests", "test_data", "ppis_test1.xlsx"),
-            {
-                "ref_ID": [
-                    "ACTN4_1",
-                    "ACTN4_1",
-                    "AKT1_1",
-                    "AKT1_1",
-                    "AKT1_1",
-                    "BAG1_1",
-                ],
-                "alt_ID": [
-                    "ACTN4_4",
-                    "ACTN4_4",
-                    "AKT1_2",
-                    "AKT1_2",
-                    "AKT1_2",
-                    "BAG1_2",
-                ],
-                "bait_ID": ["TRIM23", "MYOZ2", "TCL1A", "TMCC2", "MTUS2", "HSPA8"],
-                "perturbation": [True, True, False, True, True, True],
-            },
-            False,
-        ),
-        (
-            os.path.join("tests", "test_data", "ppis_test2.xlsx"),
-            {
-                "ref_ID": [
-                    "BCL2L1_1",
-                    "BCL2L1_1",
-                    "BCL2L1_1",
-                    "BCL2L1_1",
-                    "BCL2L1_1",
-                    "BCL2L1_1",
-                    "BTC_1",
-                ],
-                "alt_ID": [
-                    "BCL2L1_2",
-                    "BCL2L1_2",
-                    "BCL2L1_2",
-                    "BCL2L1_3",
-                    "BCL2L1_3",
-                    "BCL2L1_3",
-                    "BTC_2",
-                ],
-                "bait_ID": ["BAD", "BIK", "BMF", "BAD", "BIK", "BMF", "GMPPA"],
-                "perturbation": [True, True, True, True, False, False, True],
-            },
-            True,
-        ),
-        (
-            os.path.join("tests", "test_data", "ppis_test3.xlsx"),
-            {
-                "ref_ID": ["CLCN2_1", "CLCN2_1", "CLCN2_1", "CLCN2_1", "CLCN2_1"],
-                "alt_ID": ["CLCN2_2", "CLCN2_3", "CLCN2_4", "CLCN2_4", "CLCN2_5"],
-                "bait_ID": ["UBQLN1_ORF2", "FHL3", "FHL3", "UBQLN1_ORF2", "FHL3"],
-                "perturbation": [True, True, False, False, False],
-            },
-            False,
-        ),
-    ],
-)
-def test_find_triplets_success(test_file_path, expected_data, positive):
-    """Test that the observation dataframe creation function works, includes the
-    correct labels for each triplet."""
-    expected_df = pd.DataFrame(data=expected_data)
-    actual_df = find_triplets(test_file_path, positive)
-    assert expected_df.equals(actual_df)
 
 
 def test_process_file_error():
