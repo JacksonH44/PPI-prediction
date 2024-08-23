@@ -31,8 +31,23 @@ from src.data.data_processing import (
 random.seed(cfg.SEED)
 
 
-def randomly_select_partners(available_partners, num_samples):
-    """Randomly select num_samples partners from the available partners."""
+def randomly_select_partners(available_partners: set[str], num_samples: int) -> list[str]:
+    """
+    Randomly select num_samples partners from the available partners.
+    
+    Parameters
+    ----------
+    available_partners : set[str]
+        A set of gene names representing all potential protein interaction
+        partners
+    num_samples : int
+        The number of protein interaction partners to choose
+
+    Returns
+    -------
+    sample : list[str]
+        The partners randomly chosen as the interaction partners
+    """
     if num_samples > len(available_partners):
         raise UndersamplingError
     partner_list = list(available_partners)
@@ -40,9 +55,22 @@ def randomly_select_partners(available_partners, num_samples):
     return sample
 
 
-def count_gene_symbols(positive_ppis):
-    """Count the number of each gene symbol in the positve dataset."""
-    gene_count = defaultdict(int)
+def count_gene_symbols(positive_ppis: str) -> dict[str, int]:
+    """
+    Count the number of each gene symbol in the positve dataset.
+    
+    Parameters
+    ----------
+    positive_ppis : str
+        The path to the file of PPIs that represent the positive portion of the
+        dataset
+
+    Returns
+    -------
+    dict[str, int]
+        A map of gene symbol, count in dataset pairs for each gene symbol
+    """
+    gene_count: defaultdict[str, int] = defaultdict(int)
     # Checking the file exists
     if not os.path.isfile(positive_ppis):
         raise FileNotFoundError(
@@ -58,8 +86,8 @@ def count_gene_symbols(positive_ppis):
 
 
 def undersample_dataset(
-    locations_df: pd.DataFrame, positive_ppis: str, unsuitable_partners: dict
-) -> list:
+    locations_df: pd.DataFrame, positive_ppis: str, unsuitable_partners: dict[str, set[str]]
+) -> list[str]:
     """
     Create a list of negative PPIs where the number of PPIs for each
     gene of interest is the same as in the positive dataset.
@@ -70,12 +98,12 @@ def undersample_dataset(
         A dataframe of all potential partners a protein could have
     positive_ppis : str
         Path to the file holding all positive PPIs
-    unsuitable_partners : dict
-        A map of gene : unsuitable_partner pairs
+    unsuitable_partners : dict[str, set[str]]
+        A map of gene : set of unsuitable partners pairs
 
     Returns
     -------
-    neg_ppis : list
+    neg_ppis : list[str]
         A list of negative PPIs that has the same number of PPIs for
         each protein of interest as the positive set
     """
@@ -156,9 +184,24 @@ async def find_too_long_proteins(
     return length_map
 
 
-def find_subcellular_proteins(locations_df) -> defaultdict[str, set[str]]:
-    """Find all potential proteins that are in the same
-    subcellular location as a gene."""
+def find_subcellular_proteins(locations_df: pd.DataFrame) -> defaultdict[str, set[str]]:
+    """
+    Find all potential proteins that are in the same subcellular location as a gene.
+    
+    Parameters
+    ----------
+    locations_df : pd.DataFrame
+        A dataframe of genes and their main location they are found within a cell.
+        Probably from a CSV file such as data/raw/subcellular_locations.csv.
+    
+    Returns
+    -------
+    genes_sharing_locations : defaultdict[str, set[str]]
+        A map of gene symbol, all genes that share its subcellular location pairs. In
+        other words, the values of the hashmap are all genes that cannot be a protein
+        partner for that specific gene in the negative dataset because they are in
+        the same subcellular location.
+    """
     locations_to_genes = defaultdict(set)
     for _, row in locations_df.iterrows():
         gene = row["Gene name"]
@@ -174,9 +217,22 @@ def find_subcellular_proteins(locations_df) -> defaultdict[str, set[str]]:
     return genes_sharing_locations
 
 
-def find_interacting_proteins(all_ppis) -> defaultdict:
-    """Find all proteins that have been recorded to
-    interact with a protein produced by the gene."""
+def find_interacting_proteins(all_ppis: list[str]) -> defaultdict[str, set[str]]:
+    """
+    Find all proteins that have been recorded to
+    interact with a protein produced by the gene.
+    
+    Parameters
+    ----------
+    all_ppis : list[str]
+        A list of all PPIs you want to analyze
+    
+    Returns
+    -------
+    protein_dict : defaultdict[str, set[str]]
+        A hashmap of gene symbols and all proteins that have experimental evidence
+        of interacting with that symbol
+    """
     protein_dict = defaultdict(set)
     for pair in all_ppis:
         protein_a, protein_b = pair.split("*")
@@ -186,8 +242,8 @@ def find_interacting_proteins(all_ppis) -> defaultdict:
 
 
 async def find_unsuitable_partners(
-    genes: list, locations_df: pd.DataFrame, all_ppis: list
-) -> defaultdict:
+    genes: list[str], locations_df: pd.DataFrame, all_ppis: list[str]
+) -> defaultdict[str, set[str]]:
     """
     Find all unsuitable partners for a list of genes and return
     a mapping of a gene to its unsuitable partners. By finding
@@ -197,18 +253,18 @@ async def find_unsuitable_partners(
 
     Parameters
     ----------
-    genes : list
+    genes : list[str]
         A list of the genes of interest
     locations_df : pd.DataFrame
         A dataframe of all genes you are considering for the negative set
         and their subcellular locations
-    all_ppis: list
+    all_ppis: list[str]
         A list of all recorded protein-protein interactions involving at least
         one of the genes in the genes of interest list
 
     Returns
     -------
-    unsuitable_partners : defaultdict
+    unsuitable_partners : defaultdict[str, set[str]]
         key-value pairs where the gene of interest is the key and all the
         proteins that are unsuitable to use as negative cases in a dataset
         (in the same subcellular location or involved in a recorded PPI with
@@ -238,7 +294,24 @@ async def find_unsuitable_partners(
 
 
 def get_locations(gene_file: str, location_file: str) -> pd.DataFrame:
-    """Get subcellular locations for all genes in the file."""
+    """
+    Get subcellular locations for all genes in the file.
+    
+    Parameters
+    ----------
+    gene_file : str
+        The path to the file holding all genes to be analyzed
+    location_file : str
+        The path to the file that stores the subcellular location
+        of all genes
+
+    Returns
+    -------
+    merged_df : pd.DataFrame
+        A dataframe with a gene symbol column and a main location column
+        that stores all the main locations (can be more than one) that gene
+        is found in
+    """
     gene_df = pd.read_csv(gene_file, sep="\t", usecols=["symbol"])
     gene_df = gene_df.rename(columns={"symbol": "Gene name"})
     # Rename column to be able to merge dataframes

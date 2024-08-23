@@ -16,8 +16,20 @@ from core import config as cfg
 from src.data.data_processing import find_unique_genes
 
 
-def find_canonical_transcript(genes) -> dict[str, str]:
-    """Find the canonical transcripts for the whole set of genes."""
+def find_canonical_transcript(genes: list[str]) -> dict[str, str]:
+    """
+    Find the canonical transcripts for the whole set of genes.
+    
+    Parameters
+    ----------
+    genes : list[str]
+        A list of genes for which to find canonical transcripts
+
+    Returns
+    -------
+    transcripts : dict[str, str]
+        A list of symbol, Ensembl transcript ID pairs
+    """
     transcripts = {}
     mane_df = pd.read_csv(cfg.MANE_FILE, sep="\t", usecols=["symbol", "Ensembl_nuc"])
     for gene in genes:

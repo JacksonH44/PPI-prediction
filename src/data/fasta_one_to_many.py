@@ -8,8 +8,19 @@ import logging
 import os
 
 
-def _create_files(headers, sequences, outfolder):
-    """Write each header sequence pair to its individual FASTA file."""
+def _create_files(headers: list[str], sequences: list[str], outfolder: str):
+    """
+    Write each header sequence pair to its individual FASTA file.
+    
+    Parameters
+    ----------
+    headers : list[str]
+        All FASTA file headers
+    sequences : list[str]
+        All corresponding FASTA file sequences
+    outfolder : str
+        The folder that will hold all individual FASTA files
+    """
     for header, sequence in zip(headers, sequences):
         fname = header.split(">")[1].replace("|", "_")
         fname = f"{fname}.fasta"
@@ -20,9 +31,21 @@ def _create_files(headers, sequences, outfolder):
             file.write(f"{header}\n{sequence}")
 
 
-def process_file(fname):
-    """Split FASTA file into names of smaller
-    FASTA files and their sequences."""
+def process_file(fname: str) -> tuple[list[str], list[str]]:
+    """
+    Split FASTA file into names of smaller FASTA files and their sequences.
+    
+    Parameters
+    ----------
+    fname : str
+        The name of the file containing all headers and FASTA sequences
+    
+    Returns
+    -------
+    tuple[list[str], list[str]]
+        A tuple of all FASTA headers and sequences, where the ith header
+        corresponds to the ith amino acid sequence
+    """
     logging.debug(f"Reading in {fname}...")
     with open(fname, "r") as reader:
         headers = []

@@ -18,14 +18,14 @@ API_KEY = cfg.NCBI_API_KEY
 BASE_URL = cfg.NCBI_BASE_URL
 
 
-def fetch_fastas(input_file, output_folder):
+def fetch_fastas(input_file: str, output_folder: str):
     """
     Make an NCBI API request for the amino acid sequence in
     a FASTA file for each EntrezGene accession number in the list.
 
     Parameters
     ----------
-    reference file : str
+    input file : str
         Absolute path to the input file that is an excel file with headers Isoform_ID
         and GenBank_Accession. An example of such file is 'ppis.xlsx'.
     output_folder : str

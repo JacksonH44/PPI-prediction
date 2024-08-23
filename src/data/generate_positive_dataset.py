@@ -25,7 +25,22 @@ from src.data.data_processing import (
 
 
 def ppi_in_MANE(ppi: str, mane_df: pd.DataFrame) -> bool:
-    """Check if both of the proteins in a ppi are in the MANE summary."""
+    """
+    Check if both of the proteins in a ppi are in the MANE summary.
+    
+    Parameters
+    ----------
+    ppi : str
+        A protein-protein interaction represented as PROTEIN_A*PROTEIN_B
+    mane_df : pd.DataFrame
+        A dataframe of gene symbols in a column and their canonical transcript
+        (i.e., MANE transcript) in another column
+
+    Returns
+    -------
+    bool
+        Whether both proteins in the PPI are in the MANE summary file
+    """
     protein_a, protein_b = ppi.split("*")
     return (mane_df == protein_a).any().any() and (mane_df == protein_b).any().any()
 

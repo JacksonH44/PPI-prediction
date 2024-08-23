@@ -17,7 +17,23 @@ from core import config as cfg
 async def get_sequence_lengths(
     session: aiohttp.ClientSession, ensembl_transcript_ids: list[str]
 ) -> dict[str, int]:
-    """Query the Ensembl API to get the number of amino acids in a sequence"""
+    """
+    Query the Ensembl API to get the number of amino acids in a sequence
+
+    Parameters
+    ----------
+    session : aiohttp.ClientSession
+        The Session object that holds the context in which this function is called
+        asynchronously
+    ensembl_transcript_ids : list[str]
+        A list of transcript IDs (Ensembl) for all seqeunces you wish to get lengths for
+
+    Returns
+    -------
+    aa_counts : dict[str, int]
+        A hashmap of ensembl ID, amino acid length pairs for each protein transcript of
+        interest    
+    """
     lookup = "/lookup/id"
     headers = {"Content-Type": "application/json"}
     data = {"ids": ensembl_transcript_ids, "expand": 1}
@@ -48,8 +64,21 @@ async def get_sequence_lengths(
 
 
 def find_uniprot_ids(transcripts: list[str]) -> dict[str, str]:
-    """Query the Biomart API to map canonical Ensembl transcripts to
-    UniProt IDs."""
+    """
+    Query the Biomart API to map canonical Ensembl transcripts to
+    UniProt IDs.
+    
+    Parameters
+    ----------
+    transcripts : list[str]
+        A list of transcripts in Ensembl form that you wish to find
+        Uniprot IDs for
+
+    Returns
+    -------
+    transcript_to_uniprot : dict[str, str]
+        A hashmap of Ensembl transcript, Uniprot ID pairs
+    """
     transcripts = [transcript.split(".")[0] for transcript in transcripts]
     transcript_ids_str = ",".join(transcripts)
 
@@ -98,7 +127,23 @@ def find_uniprot_ids(transcripts: list[str]) -> dict[str, str]:
 
 
 def filter_for_uniref30(proteins: list[str]) -> list[str]:
-    """Filter out genes that don't appear in the Uniref30 DB from a list of PPIs or genes."""
+    """
+    Filter out genes that don't appear in the Uniref30 DB from a list of PPIs or genes.
+    
+    Parameters
+    ----------
+    proteins : list[str]
+        A list of either Ensembl IDs or protein-protein interactions
+        in the form of "PROTEIN_A*PROTEIN_B" that you wish to filter
+    
+    Returns
+    -------
+    filtered_genes : list[str]
+        A list of gene names that appear in Uniprot30. NOTE: The output
+        format is the same as the input format; if a list of PPIs was given
+        a list of PPIs will be the output, if a list of individual gene
+        names was given, that will be the output
+    """
     treat_as_ppis = False
     if "*" in proteins[0]:
         treat_as_ppis = True
@@ -181,8 +226,13 @@ async def get_interactors(
     relax_evidence: bool
         Whether to relax the criteria for a protein-protein interaction.
         If False, only high-confidence (low throughput, high reliability
-        physical cross-referenced) evidence will be used. If True, any \
+        physical cross-referenced) evidence will be used. If True, any
         evidence of a physical interaction in Biogrid will be used.
+
+    Returns
+    -------
+    output_ppis : list[str]
+        A list of all PPIs found
     """
     request_url = cfg.BIOGRID_BASE_URL + "/interactions"
     strict_evidence_list = cfg.BIOGRID_STRICT_EVIDENCE

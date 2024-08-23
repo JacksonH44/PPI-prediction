@@ -13,9 +13,20 @@ def write_combined_a3m(
     second_msa_sequences: dict[str, str],
     output_msa: str,
 ) -> None:
-    """Write the header-sequence pairs as one MSA file in
+    """
+    Write the header-sequence pairs as one MSA file in
     accordance with the example shown in ColabFold issue
-    #76."""
+    #76.
+    
+    Parameters
+    ----------
+    first_msa_sequences : dict[str, str]
+        All sequences from the first MSA (e.g., first protein MSA)
+    second_msa_sequences : dict[str, str]
+        All sequences from the second MSA (e.g., second protein MSA)
+    output_msa : str
+        The path to the desired output MSA file
+    """
     first_length = len(list(first_msa_sequences.values())[0])
     second_length = len(list(second_msa_sequences.values())[0])
     if os.path.isabs(output_msa):
@@ -43,8 +54,20 @@ def write_combined_a3m(
 
 
 def extract_header_sequence_pairs(msa_file) -> dict[str, str]:
-    """Return a hashmap of header-sequence pairs for an
-    MSA file."""
+    """
+    Return a hashmap of header-sequence pairs for an
+    MSA file.
+    
+    Parameters
+    ----------
+    msa_file : str
+        The path to the MSA file of interest
+    
+    Returns
+    -------
+    sequences : dict[str, str]
+        A map of header to amino acid sequence pairs for the file
+    """
     with open(msa_file, "r") as msa_file:
         lines = msa_file.readlines()
     sequences: dict[str, str] = {}
