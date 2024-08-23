@@ -2,13 +2,34 @@ import os
 import sys
 from Bio.PDB import PDBParser, SASA  # type: ignore
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.features.feature_calculator import FeatureCalculator  # type: ignore
 
 
 class SurfaceAreaCalculator(FeatureCalculator):
     """
     Calculate the surface area for a given complex
+
+    Usage
+    -----
+    sac = SurfaceAreaCalculator(
+        os.path.join(
+            'tests',
+            'test_data',
+            'colabfold',
+            '321',
+            'SMARCE1_DPF2.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb'
+        ),
+        os.path.join(
+            'tests',
+            'test_data',
+            'colabfold',
+            'monomer',
+            'ENST00000528416_DPF2.msa_unrelaxed_rank_001_alphafold2_ptm_model_1_seed_000.pdb'
+        )
+    )
+    sac.calculate_residue_metrics()
+    deltas = sac.calculate_delta_metrics()
     """
 
     def __init__(self, multimer_pdb_path: str, monomer_pdb_path: str):
@@ -33,7 +54,7 @@ class SurfaceAreaCalculator(FeatureCalculator):
             for the PDB file
         """
         p = PDBParser(QUIET=1)
-        symbol = pdb_path.split("/")[-1].split(".")[0]
+        symbol = os.path.basename(pdb_path).split(".")[0]
         struct = p.get_structure(symbol, pdb_path)
         sr = SASA.ShrakeRupley()
         sr.compute(struct, level="R")
@@ -73,15 +94,3 @@ class SurfaceAreaCalculator(FeatureCalculator):
         )
         monomer_struct = self._calculate_surface_area_struct(self._monomer_pdb_path)
         self._monomer_residue_metrics = self._extract_residues(monomer_struct[0]["A"])
-
-
-if __name__ == '__main__':
-    sac = SurfaceAreaCalculator(
-        ('tests/test_data/colabfold/0/CDKN2A_TRAPPC2L'
-         '.msa_unrelaxed_rank_001_alphafold2_multimer_v3_model_2_seed_000.pdb'),
-        ('tests/test_data/colabfold/monomer/ENST00000304494_CDKN2A'
-         '.msa_unrelaxed_rank_001_alphafold2_ptm_model_2_seed_000.pdb')
-    )
-    sac.calculate_residue_metrics()
-    deltas = sac.calculate_delta_metrics()
-    print(deltas)

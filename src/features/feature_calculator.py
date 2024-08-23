@@ -84,7 +84,7 @@ class FeatureCalculator(ABC):
             sequence length
         """
         msa_file = os.path.join(
-            os.path.dirname(self._multimer_pdb_path), f'{self._complex_symbol}.msa.a3m'
+            os.path.dirname(self._multimer_pdb_path), f"{self._complex_symbol}.msa.a3m"
         )
         try:
             with open(msa_file, "r") as msa:
@@ -230,8 +230,15 @@ class FeatureCalculator(ABC):
             self._multimer_non_interaction_site
         ), "The lengths of monomer and multimer residue interaction site should be the same"
         interaction_delta = round(
-            (sum(self._multimer_interaction_site) - sum(self._monomer_interaction_site))
-            / len(self._monomer_interaction_site) if len(self._monomer_interaction_site) != 0 else 0,
+            (
+                (
+                    sum(self._multimer_interaction_site)
+                    - sum(self._monomer_interaction_site)
+                )
+                / len(self._monomer_interaction_site)
+                if len(self._monomer_interaction_site) != 0
+                else 0
+            ),
             4,
         )
         non_interaction_delta = round(
