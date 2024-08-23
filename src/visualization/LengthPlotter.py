@@ -8,7 +8,7 @@ import sys
 
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.visualization.Plotter import Plotter
 
 
@@ -23,12 +23,11 @@ class LengthPlotter(Plotter):
 
     Usage
     -----
-    lp = ConfidencePlotter(
-        'data/processed/negative_ppis.csv',
-        'data/processed/colabfold_stats.csv',
-        'data/interim/sequence_lengths.csv'
+    lp = LengthPlotter(
+        os.path.join('data', 'processed', 'negative_ppis.csv'),
+        os.path.join('data', 'processed', 'colabfold_stats.csv')
     )
-    cp.plot('reports/figures/confidence.svg')
+    lp.plot(os.path.join('reports', 'figures', 'length.svg'))
     """
 
     def __init__(

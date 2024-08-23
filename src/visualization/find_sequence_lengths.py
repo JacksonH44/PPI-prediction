@@ -16,7 +16,7 @@ import aiohttp
 import matplotlib.pyplot as plt  # type: ignore
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.data.bio_apis import get_sequence_lengths
 from src.data.data_processing import (
     chunk_input_genes,
@@ -89,28 +89,28 @@ def parse_command_line():  # pragma: no cover
         "-p",
         "--positive",
         type=str,
-        default="data/processed/positive_ppis.csv",
+        default=os.path.join("data", "processed", "positive_ppis.csv"),
         help="Path to the positive PPIs dataset",
     )
     parser.add_argument(
         "-n",
         "--negative",
         type=str,
-        default="data/processed/negative_ppis.csv",
+        default=os.path.join("data", "processed", "negative_ppis.csv"),
         help="Path to the negative PPIs dataset",
     )
     parser.add_argument(
         "-o",
         "--outfile",
         type=str,
-        default="data/interim/sequence_lengths.csv",
+        default=os.path.join("data", "interim", "sequence_lengths.csv"),
         help="Path to output file to store sequence lengths",
     )
     parser.add_argument(
         "-i",
         "--visualization",
         type=str,
-        default="data/processed",
+        default=os.path.join("data", "processed"),
         help="Path to output folder of lengths histogram",
     )
     parser.add_argument(
@@ -136,7 +136,9 @@ async def main():  # pragma: no cover
     logfile = (
         args.logfile
         if args.logfile is not None
-        else os.path.join(os.getcwd(), "logs/find_sequence_lengths.log")
+        else os.path.join(
+            os.getcwd(), os.path.join("logs", "find_sequence_lengths.log")
+        )
     )
     os.makedirs(os.path.dirname(logfile), exist_ok=True)
     if not os.path.exists(logfile):
@@ -166,7 +168,7 @@ async def main():  # pragma: no cover
     logging.debug("Plotting histogram of sequence lengths...")
     plot_lengths_distribution(
         list(monomer_lengths.values()),
-        f"{args.visualization}/protein_length_distribution.png",
+        os.path.join(f"{args.visualization}", "protein_length_distribution.png"),
     )
     multimer_lengths = sort_complex_lengths(
         args.positive, args.negative, all_transcripts, length_map
@@ -174,7 +176,7 @@ async def main():  # pragma: no cover
     logging.debug("Plotting histogram of complex lengths...")
     plot_lengths_distribution(
         list(multimer_lengths.values()),
-        f"{args.visualization}/complex_length_distribution.png",
+        os.path.join(f"{args.visualization}", "complex_length_distribution.png"),
     )
     logging.info(f"Saving sequence lengths to {args.outfile}...")
     save_sequence_lengths(monomer_lengths, multimer_lengths, args.outfile)

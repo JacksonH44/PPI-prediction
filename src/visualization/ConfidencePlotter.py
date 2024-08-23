@@ -8,7 +8,7 @@ import sys
 
 import pandas as pd
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.join("..", "..")))
 from src.visualization.Plotter import Plotter
 
 
@@ -19,10 +19,10 @@ class ConfidencePlotter(Plotter):
     Usage
     -----
     cp = ConfidencePlotter(
-        'data/processed/negative_ppis.csv',
-        'data/processed/colabfold_stats.csv'
+        os.path.join('data', 'processed', 'negative_ppis.csv'),
+        os.path.join('data', 'processed', 'colabfold_stats.csv')
     )
-    cp.plot('reports/figures/confidence.svg')
+    cp.plot(os.path.join('reports', 'figures', 'confidence.svg'))
     """
 
     def __init__(self, negative_ppi_file_path: str, stats_file_path: str):
